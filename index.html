@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Israel Firearm License Practice Quiz</title>
+<style>
+:root {
+  --bg:#f4f6f8; --card:#fff; --text:#15202b; --muted:#667085;
+  --accent:#165dff; --good:#067647; --bad:#b42318; --line:#d0d5dd;
+}
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:var(--bg); color:var(--text); }
+.wrap { max-width:780px; margin:auto; padding:18px 14px 40px; }
+header { text-align:center; padding:8px 8px 14px; }
+h1 { font-size:24px; margin:4px 0 8px; }
+.sub { color:var(--muted); font-size:14px; line-height:1.4; }
+.card { background:var(--card); border-radius:18px; padding:20px;
+  box-shadow:0 5px 22px rgba(16,24,40,.08); }
+.toprow { display:flex; justify-content:space-between; gap:10px; color:var(--muted);
+  font-weight:600; font-size:14px; }
+.progress { height:9px; background:#e4e7ec; border-radius:99px;
+  overflow:hidden; margin:12px 0 22px; }
+.bar { height:100%; width:0; background:var(--accent); transition:width .25s ease; }
+.question { font-size:21px; font-weight:750; line-height:1.42; margin-bottom:18px; }
+.he { direction:rtl; text-align:right; font-family:Arial,"Noto Sans Hebrew",sans-serif; }
+.both-block + .both-block { margin-top:10px; padding-top:10px; border-top:1px solid #eaecf0; }
+.lang-label { display:block; color:var(--muted); font-size:11px; font-weight:800;
+  letter-spacing:.04em; margin-bottom:4px; }
+.options { display:grid; gap:11px; }
+.option { width:100%; text-align:left; padding:14px; border:2px solid var(--line);
+  border-radius:14px; background:white; font-size:16px; line-height:1.4; cursor:pointer; }
+.option .letter { display:inline-grid; place-items:center; width:27px; height:27px;
+  border-radius:50%; border:1px solid #98a2b3; margin-right:9px; font-weight:700;
+  vertical-align:top; flex:0 0 auto; }
+.option-row { display:flex; align-items:flex-start; }
+.option-text { flex:1; }
+.option-he { direction:rtl; text-align:right; margin-top:7px; padding-top:7px;
+  border-top:1px dashed #d0d5dd; }
+.option.correct { border-color:var(--good); background:#ecfdf3; }
+.option.wrong { border-color:var(--bad); background:#fef3f2; }
+.option:disabled { cursor:default; color:inherit; }
+.feedback { display:none; margin-top:18px; padding:15px; border-radius:13px; line-height:1.5; }
+.feedback.good { display:block; color:#05603a; background:#ecfdf3; }
+.feedback.bad { display:block; color:#912018; background:#fef3f2; }
+.actions { display:flex; gap:10px; margin-top:18px; }
+button.action { flex:1; border:0; border-radius:12px; padding:14px; font-size:16px;
+  font-weight:700; cursor:pointer; }
+.primary { background:var(--accent); color:white; }
+.secondary { background:#e4e7ec; color:#344054; }
+.hidden { display:none !important; }
+.results h2 { font-size:28px; margin:0 0 8px; }
+.scorebig { font-size:46px; font-weight:800; margin:10px 0; }
+.review-item { border-top:1px solid #eaecf0; padding:15px 0; }
+.review-item strong { display:block; margin-bottom:6px; }
+.notice { margin-top:14px; font-size:12px; color:var(--muted); text-align:center; line-height:1.4; }
+.controls { margin:12px 0 0; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+.controls button { border:1px solid var(--line); background:#fff; border-radius:999px;
+  padding:9px 13px; font-weight:700; cursor:pointer; }
+.controls button.active { background:var(--accent); color:white; border-color:var(--accent); }
+.control-title { width:100%; color:var(--muted); font-size:12px; font-weight:700; margin-top:4px; }
+@media (prefers-color-scheme:dark) {
+ :root { --bg:#101828; --card:#1d2939; --text:#f2f4f7; --muted:#98a2b3; --line:#475467; }
+ .option { background:#1d2939; color:#f2f4f7; }
+ .secondary { background:#344054; color:white; }
+ .controls button { background:#1d2939; color:white; }
+ .both-block + .both-block, .option-he { border-color:#475467; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Israel Firearm License Practice Quiz</h1>
+<div class="sub">50 questions · English, Hebrew, or both · immediate feedback</div>
+
+<div class="controls" id="languageControls">
+<div class="control-title">Display language</div>
+<button data-lang="en" onclick="setLanguage('en')">English</button>
+<button data-lang="he" onclick="setLanguage('he')">עברית</button>
+<button data-lang="both" onclick="setLanguage('both')">Both</button>
+</div>
+
+<div class="controls">
+<div class="control-title">Quiz order</div>
+<button onclick="restart(false)">Restart in order</button>
+<button onclick="restart(true)">Shuffle questions</button>
+</div>
+</header>
+
+<section id="quiz" class="card">
+<div class="toprow"><span id="counter"></span><span id="score"></span></div>
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="question" class="question"></div>
+<div id="options" class="options"></div>
+<div id="feedback" class="feedback"></div>
+<div class="actions">
+<button id="next" class="action primary hidden" onclick="nextQuestion()">Next question</button>
+</div>
+</section>
+
+<section id="results" class="card results hidden">
+<h2>Quiz complete</h2>
+<div id="scoreBig" class="scorebig"></div>
+<div id="resultText"></div>
+<div class="actions">
+<button class="action primary" onclick="restart(true)">Try again shuffled</button>
+<button id="missedBtn" class="action secondary" onclick="startMissed()">Review missed</button>
+</div>
+<div id="review"></div>
+</section>
+
+<div class="notice">
+Practice material based on the uploaded bilingual exam—not an official licensing examination or legal advice.
+Always follow the live instructions of the licensed range officer.
+</div>
+</div>
+
+<script>
+const MASTER = [{"number": 1, "question": "Under Article 34J of the Israeli Penal Law, when is a shooting legally ruled self-defense?", "options": [{"letter": "A", "text": "To protect commercial property from trespassing.", "textHe": "כְּדֵי לְהָגֵן על רְכוּשׁ עִסְקִי מִפְּנֵי הַסָּגַת גְּבוּל."}, {"letter": "B", "text": "To retaliate against a physical assault that ended.", "textHe": "כִּנְקָמָה עַל תְּקִיפָה פִּיזִית שֶׁכְּבָר הִסְתַּיְּימָה."}, {"letter": "C", "text": "Only during an immediate, concrete threat to life.", "textHe": "אַךְ וְרַק בִּזְמַן סַכָּנָה מוּחָשִׁית וּמִיָּדִית לַחַיִּים."}, {"letter": "D", "text": "Whenever an intruder enters a fenced backyard.", "textHe": "בְּכָל פַּעַם שֶׁפּוֹרֵץ נִכְנָס לְחָצֵר אֲחוֹרִית מְגֻדֶּרֶת."}], "correct": "C", "explanation": "The exam’s framework requires an immediate, concrete threat—not protection of property or retaliation.", "questionHe": "לְפִי סְעִיף 34י לְחוֹק הָעוֹנָשִׁין, מָתַי יֶרִי נֶחְשָׁב לְהַגָּנָה עַצְמִית?"}, {"number": 2, "question": "If an attacker drops their weapon and raises their hands, what must you do?", "options": [{"letter": "A", "text": "Fire a warning shot at the ground.", "textHe": "לִירּוֹת יְרִייַת אַזְהָרָה כְּלַפֵּי הָאֲדָמָה."}, {"letter": "B", "text": "Stop shooting and halt all force immediately.", "textHe": "לְהַפְסִיק לִירּוֹת וְלַעֲצֹר אֶת כָּל הַכֹּחַ מִיָּד."}, {"letter": "C", "text": "Shoot center-mass to ensure total safety.", "textHe": "לִירּוֹת לְמֶרְכַּז הַמָּסָה כְּדֵי לְהַבְטִיחַ Bְּטִיחוּת מְלֵאָה."}, {"letter": "D", "text": "Order them to move back while firing.", "textHe": "לִפְקֹד עָלָיו לָזוּז לְאָחוֹר תּוֹךְ כְּדֵי יֶרִי."}], "correct": "B", "explanation": "Once the attacker is no longer presenting an active threat, force must stop immediately.", "questionHe": "אִם הַתּוֹקֵף שָׁמַט אֶת כְּלִי הַנֶּשֶׁק שֶׁלּוֹ וְהֵרִים יָדַיִם, מָה עָלֶיךָ לַעֲשׂוֹת?"}, {"number": 3, "question": "Are you legally permitted to shoot a thief fleeing inside your stolen vehicle?", "options": [{"letter": "A", "text": "Yes, to target and deflate the tires.", "textHe": "כֵּן, כְּדֵי לְפַגֵּעַ וּלְפוֹצֵץ אֶת הַצְּמִיגִים."}, {"letter": "B", "text": "Yes, because vehicle theft is a major crime.", "textHe": "כֵּן, מִכֵּיוָן שֶׁגְּנֵבַת רֶכֶב הִיא עֲבֵירָה חֲמוּרָה."}, {"letter": "C", "text": "No, because a fleeing thief poses no danger to life.", "textHe": "לֹא, כִּי גַּנָּב נִמְלָט אֵינוֹ מְהַוֶּה סַכָּנַת חַיִּים."}, {"letter": "D", "text": "No, unless the vehicle contains private documents.", "textHe": "לֹא, אֶלָּא אִם כֵּן הָרֶכֶב מֵכִיל מִסְמָכִים פְּרָטִיִּים."}], "correct": "C", "explanation": "A fleeing property thief, without an active threat to life, does not justify shooting.", "questionHe": "הַאִם מוּתָּר לְךָ מִבְּחִינָה חוּקִית לִירּוֹת בְּגַנָּב הַנִּמְלָט בְּתוֹךְ רִכְבְּךָ הַגָּנוּב?"}, {"number": 4, "question": "What does \"Proportionality\" mean in Israeli self-defense law?", "options": [{"letter": "A", "text": "You must match the attacker's weapon caliber.", "textHe": "עָלֶיךָ לְהַתְאִים אֶת קוֹטֶר הַנֶּשֶׁק לְקוֹטֶר נֶשֶׁק הַתּוֹקֵף."}, {"letter": "B", "text": "You must aim for the exact limb that was injured.", "textHe": "עָלֶיךָ לְכַוֵּון לַגֶּפֶר הַמְּדֻיֶּיקֶת שֶׁבָּהּ נִפְגַּעְתָּ."}, {"letter": "C", "text": "Defensive force must match the severity of the danger.", "textHe": "עוֹצְמַת הַכֹּחַ הַמָּגֵן חַיֶּיבֶת לְהַתְאִים לְחוּמְרַת הַסַּכָּנָה."}, {"letter": "D", "text": "You can only shoot after suffering a physical injury.", "textHe": "מוּתָּר לְךָ לִירּוֹת רַק לְאַחַר שֶׁסָּבַלְתָּ מִפְּגִיעָה פִּיזִית."}], "correct": "C", "explanation": "Proportionality means the defensive force must reasonably correspond to the seriousness of the danger.", "questionHe": "מָה פֵּרוּשׁ הַמֻּשָּׂג 'פְּרוֹפּוֹרְצְיוֹנָלִיּוּת' (מִידָּתִיּוּת) בְּחוֹק הַהֲגָנָה הָעַצְמִית?"}, {"number": 5, "question": "Which condition is mandatory to claim legal self-defense?", "options": [{"letter": "A", "text": "The threat must be purely verbal.", "textHe": "הָאָיּוּם חַיָּיב לִהְיוֹת מִילּוּלִי בִּלְבַד."}, {"letter": "B", "text": "There must be an active, immediate threat to life.", "textHe": "חַיֶּיבֶת לִהְיוֹת סַכָּנָה פְּעִילָה וּמִיָּדִית לַחַיִּים."}, {"letter": "C", "text": "You must fire three distinct warning shots first.", "textHe": "עָלֶיךָ לִירּוֹת שָׁלוֹשׁ יְרִיוֹת אַזְהָרָה נִפְרָדוֹת תְּחִלָּה."}, {"letter": "D", "text": "The defender must be inside an enclosed home.", "textHe": "הַמֵּגֵן חַיָּיב לִהְיוֹת בְּתוֹךְ בַּיִת סָגוּר."}], "correct": "B", "explanation": "The central requirement presented here is an active and immediate threat to life.", "questionHe": "אֵיזֶה תְּנָאי הוּא חוֹבָה כְּדֵי לִטְעֹן לְהַגָּנָה עַצְמִית חוּקִית?"}, {"number": 6, "question": "Drawing your gun during a verbal traffic argument results in:", "options": [{"letter": "A", "text": "No penalty if the chamber is completely empty.", "textHe": "שׁוּם עֹנֶשׁ אִם בֵּית הַבְּלִיעָה רֵיק לַחֲלוּטִין."}, {"letter": "B", "text": "A fine if the other driver used insults.", "textHe": "קְנָס אִם הַנֶּהָג הַשֵּׁנִי הִשְׁתַּמֵּשׁ בִּקְלָלוֹת."}, {"letter": "C", "text": "Immediate license revocation and criminal charges.", "textHe": "שְׁלִילָה מִיָּדִית שֶׁל הָרִישָׁיוֹן וַהֲלִיכִים פְּלִילִיִּים."}, {"letter": "D", "text": "A simple administrative driving restriction.", "textHe": "הַגְבָּלַת נְהִיגָה מִנְהָלִית פְּשׁוּטָה בִּלְבַד."}], "correct": "C", "explanation": "Drawing a firearm during a merely verbal road dispute is unlawful and can lead to serious criminal and licensing consequences.", "questionHe": "שְׁלִיפַת נֶשֶׁק בְּמַהֲלַךְ וִּיכּוּחַ כְּבִישׁ מִילּוּלִי מוֹבִילָה לְ:"}, {"number": 7, "question": "After neutralizing a threat in self-defense, what is your first duty?", "options": [{"letter": "A", "text": "Clean the handgun thoroughly to prevent rust.", "textHe": "לְנַקּוֹת אֶת הָאֶקְדָּח הֵיטֵב כְּדֵי לִמְנֹעַ חֲלֻדָּה."}, {"letter": "B", "text": "Collect spent casings to clean up the area.", "textHe": "לֶאֱסֹף תְּרָמִילִים כְּדֵי לְנַקּוֹת אֶת הָאֵזוֹר."}, {"letter": "C", "text": "Call emergency services (100/101) and secure the scene.", "textHe": "לְהִתְקַשֵּׁר לְכוֹחוֹת הַהַצָּלָה (100/101) וּלְאַבְטֵחַ אֶת הַזִּירָה."}, {"letter": "D", "text": "Flee the scene to hide from retaliatory actions.", "textHe": "לִבְרֹוחַ מֵהַזִּירָה כְּדֵי לְהִתְחַמֵּק מִפְּעֻלּוֹת תַּגְמוּל."}], "correct": "C", "explanation": "Call Police and medical services, secure the scene, and preserve evidence.", "questionHe": "לְאַחַר נִטְרוּל אָיּוּם בְּהַגָּנָה עַצְמִית, מָהִי חוֹבָתְךָ הָרִאשׁוֹנָה?"}, {"number": 8, "question": "Can you claim self-defense if you intentionally provoked the fight?", "options": [{"letter": "A", "text": "Yes, if the other person hit you first.", "textHe": "כֵּן, אִם הָאָדָם הַשֵּׁנִי הִכָּה אוֹתְךָ רִאשׁוֹן."}, {"letter": "B", "text": "No, because you violated the non-provocation rule.", "textHe": "לֹא, כִּי הֵפַרְתָּ אֶת כְּלָל אִי-הַהִתְגָּרוּת."}, {"letter": "C", "text": "Yes, if the fight happened in a public space.", "textHe": "כֵּן, אִם הַקְּטָטָה הִתְרַחֲשָׁה בְּמָקוֹם צִבּוּרִי."}, {"letter": "D", "text": "No, unless you are using non-lethal ammo.", "textHe": "לֹא, אֶלָּא אִם כֵּן אַתָּה מִשְׁתַּמֵּשׁ בְּתַחְמֹשֶׁת לֹא קַטְלָנִית."}], "correct": "B", "explanation": "Intentional provocation defeats the non-provocation condition described in the study material.", "questionHe": "הַאִם תּוּכַל לִטְעֹן לְהַגָּנָה עַצְמִית אִם גָּרַמְתָּ לַקְּטָטָה בְּכַוָּנָה?"}, {"number": 9, "question": "Does Israeli law justify using a gun against verbal threats?", "options": [{"letter": "A", "text": "Yes, if the person promises future physical harm.", "textHe": "כֵּן, אִם הָאָדָם מַבְטִיחַ פְּגִיעָה פִּיזִית עֲתִידִית."}, {"letter": "B", "text": "No, words do not pose an immediate danger to life.", "textHe": "לֹא, מִילִּים אֵינָן מְהַוּוֹת סַכָּנַת חַיִּים מִיָּדִית."}, {"letter": "C", "text": "Yes, if the insults occur late at night.", "textHe": "כֵּן, אִם הַקְלָלוֹת מִתְרַחֲשׁוֹת בְּשָׁעָה מְאֻחֶרֶת בַּלַּיְלָה."}, {"letter": "D", "text": "No, unless targeted at a group of citizens.", "textHe": "לֹא, אֶלָּא אִם כֵּן הֵם מֻפְנִים כְּלַפֵּי קְבוּצַת אֶזְרָחִים."}], "correct": "B", "explanation": "Words or a future threat alone are not an immediate threat to life.", "questionHe": "הַאִם הַחוֹק מַצְדִּיק שִׁמוּשׁ בְּנֶשֶׁק מוּל אָיּוּמִים מִילּוּלִיִּים?"}, {"number": 10, "question": "Continuing to shoot an attacker after they are incapacitated is:", "options": [{"letter": "A", "text": "Legally acceptable to ensure safety.", "textHe": "קְבִילָה מִבְּחִינָה חוּקִית כְּדֵי לְהַבְטִיחַ בְּטִיחוּת."}, {"letter": "B", "text": "A proper tactical response on the range.", "textHe": "תְּגוּבָה טַקְטִית נְכוֹנָה לְפִי כְּלָלֵי הַמִּטְוָח."}, {"letter": "C", "text": "A severe criminal offense (manslaughter or murder).", "textHe": "עֲבֵירָה פְּלִילִית חֲמוּרָה (הֲרִיגָה אוֹ רֶצַח)."}, {"letter": "D", "text": "Permitted if using your original magazine.", "textHe": "מוּתֶּרֶת אִם אַתָּה מִשְׁתַּמֵּשׁ בַּמַּחְסָנִית הַמְּקוֹרִית שֶׁלְּךָ."}], "correct": "C", "explanation": "Force must stop once the threat is neutralized; continuing to shoot can constitute a serious offense.", "questionHe": "הַמְשָׁכַת יֶרִי בְּתוֹקֵף לְאַחַר שֶׁהוּא כְּבָר מְנֻטְרָל הִיא:"}, {"number": 11, "question": "Under Article 34J, if you can safely retreat from a public area threat without risk:", "options": [{"letter": "A", "text": "You must shoot to neutralize the suspect anyway.", "textHe": "עָלֶיךָ לִירּוֹת כְּדֵי לְנַטְרֵל אֶת הַחָשׁוּד בְּכָל זֹאת."}, {"letter": "B", "text": "You are legally required to retreat rather than use deadly force.", "textHe": "אַתָּה נִדְרָשׁ עַל פִּי חוֹק לָסֶגֶת בְּמָקוֹם לְהִשְׁתַּמֵּשׁ בְּכֹחַ קַטְלָנִי."}, {"letter": "C", "text": "You may fire warning shots into the sky.", "textHe": "מוּתָּר לְךָ לִירּוֹת יְרִיוֹת אַזְהָרָה אֶל עֵבֶר הַשָּׁמַיִם."}, {"letter": "D", "text": "You must stand your ground and draw your frame.", "textHe": "עָלֶיךָ לַעְמֹד עַל שֶׁלְּךָ וְלִשְׁלֹף אֶת גּוּף הַנֶּשֶׁק."}], "correct": "B", "explanation": "Under the framework used in this study guide, deadly force is not justified when a safe, effective alternative exists.", "questionHe": "לְפִי סְעִיף 34י, אִם אַתָּה יָכוֹל לָסֶגֶת בְּבִטְחָה מֵאָיּוּם בְּמָקוֹם צִבּוּרִי לְלֹא סִכּוּן:"}, {"number": 12, "question": "If an intruder brandishes a weapon inside your home late at night, force used must:", "options": [{"letter": "A", "text": "Be unlimited until the intruder is dead.", "textHe": "לִהְיוֹת בִּלְתִּי מֻגְבָּל עַד שֶׁהַפּוֹרֵץ יָמוּת."}, {"letter": "B", "text": "Stop the moment the active life threat is stopped.", "textHe": "לַעְצֹר בָּרֶגַע שֶׁסַּכָּנַת הַחַיִּים הַפְּעִילָה נֶעֶצְרָה."}, {"letter": "C", "text": "Consist only of a manual knife or tool.", "textHe": "לִהְיוֹת מֻרְכָּב רַק מִסַּכִּין יְדָנִית אוֹ כְּלִי עֲבוֹדָה."}, {"letter": "D", "text": "Always hit only the lower legs or boots.", "textHe": "תָּמִיד לִפְגֹּעַ רַק בַּשּׁוֹקַיִים הַתַּחְתּוֹנוֹת אוֹ בַּנַּעֲלַיִם."}], "correct": "B", "explanation": "Even inside the home, force must stop as soon as the active life threat ends.", "questionHe": "אִם פּוֹרֵץ מֵנִיף כְּלִי נֶשֶׁק בְּתוֹךְ בֵּיתְךָ בְּשָׁעָה מְאֻחֶרֶת בַּלַּיְלָה, הַכֹּחַ הַמֻּפְעָל חַיָּיב:"}, {"number": 13, "question": "Which of these scenarios violates the legal condition of \"Imminence\"?", "options": [{"letter": "A", "text": "Shooting an armed suspect who is actively running at you.", "textHe": "יֶרִי בְּחָשׁוּד חָמוּשׁ הָרָץ לְכִיוּוּנְךָ בְּאֹפֶן פְּעִיל."}, {"letter": "B", "text": "Shooting a suspect because they threatened to find you next week.", "textHe": "יֶרִי בְּחָשׁוּד מִכֵּיוָן שֶׁהוּא אִיֵּים לִמְצֹא אוֹתְךָ בַּשָּׁבוּעַ הַבָּא."}, {"letter": "C", "text": "Shooting an assailant pointing a handgun at a pedestrian.", "textHe": "יֶרִי בְּתוֹקֵף הַמְכַוֵּון אֶת אֶקְדָּחוֹ אֶל עֵבֶר הוֹלֵךְ רֶגֶל."}, {"letter": "D", "text": "Shooting a burglar charging with an iron bar.", "textHe": "יֶרִי בְּפוֹרֵץ הַסְּתָעֵר עִם מוֹט בַּרְזֶל."}], "correct": "B", "explanation": "A threat to act next week is future—not imminent.", "questionHe": "אֵיזֶה מֵהַתַּרְחִישִׁים הַבָּאִים מֵפֵר אֶת הַתְּנָאי הַחוּקִי שֶׁל 'מִיָּדִיּוּת'?"}, {"number": 14, "question": "Fleeing the scene of a self-defense shooting before police arrive is:", "options": [{"letter": "A", "text": "Recommended to clean the weapon elements safely.", "textHe": "מוּמְלֶצֶת כְּדֵי לְנַקּוֹת אֶת חֶלְקֵי הַנֶּשֶׁק בְּבִטְחָה."}, {"letter": "B", "text": "Illegal, as you must remain to secure the environment and report.", "textHe": "לֹא חוּקִית, כִּי עָלֶיךָ לְהִשָּׁאֵר כְּדֵי לְאַבְטֵחַ אֶת הַסְּבִיבָה וּלְדַוֵּוחַ."}, {"letter": "C", "text": "Allowed if you call the licensing bureau within 48 hours.", "textHe": "מוּתֶּרֶת אִם אַתָּה מִתְקַשֵּׁר לְאַגַּף הָרִשּׁוּי תּוֹךְ 48 שָׁעוֹת."}, {"letter": "D", "text": "Proper practice if the target area was isolated.", "textHe": "פְּעֻלָּה תַּקִינָה אִם אֵזוֹר הַמַּטָּרָה הָיָה מְבוּדָּד."}], "correct": "B", "explanation": "The study material says to remain, report, secure the area, and avoid disturbing evidence unless staying is dangerous.", "questionHe": "בְּרִיחָה מִזִּירַת יֶרִי שֶׁל הֲגָנָה עַצְמִית לִפְנֵי הַגָּעַת הַמִּשְׁטָרָה הִיא:"}, {"number": 15, "question": "If an individual punches you once in a casual fistfight, drawing your gun is:", "options": [{"letter": "A", "text": "Unlawful, as a minor physical brawl does not validate deadly force.", "textHe": "לֹא חוּקִית, כִּי תִּגְרָה פִּיזִית קַלָּה אֵינָהּ מַצְדִּיקָה כֹּחַ קַטְלָנִי."}, {"letter": "B", "text": "Lawful, as any assault permits civilian weapon use.", "textHe": "חוּקִית, כִּי כָּל תְּקִיפָה מַתִּירָה שִׁמוּשׁ בְּנֶשֶׁק אֶזרָחִי."}, {"letter": "C", "text": "Proper if you display the magazine base window first.", "textHe": "תַּקִינָה אִם אַתָּה מַרְאֶה אֶת חַלּוֹן בָּסִיס הַמַּחְסָנִית תְּחִלָּה."}, {"letter": "D", "text": "Allowed if you are standing near a certified range facility.", "textHe": "מוּתֶּרֶת אִם אַתָּה עוֹמֵד קָרוֹב לְמִתְקַן מִטְוָח מֻסְמָךְ."}], "correct": "A", "explanation": "A single punch in an ordinary fistfight does not by itself justify deadly force.", "questionHe": "אִם אָדָם מַכֶּה אוֹתְךָ פַּעַם אַחַת בִּקְטָטַת אֶגְרוֹפִים רְגִילָה, שְׁלִיפַת הַנֶּשֶׁק הִיא:"}, {"number": 16, "question": "What is the first iron safety rule for any firearm?", "options": [{"letter": "A", "text": "Treat it as empty until loaded.", "textHe": "הִתְיַחֵס אֵלָיו כְּאֶל רֵיק עַד שֶׁיִּטָּעֵן."}, {"letter": "B", "text": "Treat every firearm as if it is loaded at all times.", "textHe": "הִתְיַחֵס לְכָל כְּלִי נֶשֶׁק כְּאֶל טָעוּן תָּמִיד וּבְכָל מַצָּב."}, {"letter": "C", "text": "Trust manual safeties to prevent discharges.", "textHe": "סְמֹךְ עַל נִצְרוֹת מֶכָנִיּוֹת לִמְנִיעַת פְּלִיטַת כַּדּוּר."}, {"letter": "D", "text": "Rely fully on the word of the previous user.", "textHe": "סְמֹךְ לַחֲלוּטִין עַל מִילָּתוֹ שֶׁל הַמִּשְׁתַּמֵּשׁ הַקּוֹדֵם."}], "correct": "B", "explanation": "Always treat every firearm as loaded.", "questionHe": "מָהוּ חֹק הַבַּרְזֶל הָרִאשׁוֹן שֶׁל בְּטִיחוּת בְּנֶשֶׁק?"}, {"number": 17, "question": "Where is the only safe direction to point a gun at a range?", "options": [{"letter": "A", "text": "Upward toward the ceiling panel.", "textHe": "כְּלַפֵּי מַעְלָה לְכִיוּוּן לוּחַ הַתִּקְרָה."}, {"letter": "B", "text": "Downward near your support foot.", "textHe": "כְּלַפֵּי מַטָּה קָרוֹב לְרֶגֶל הַתְּמִיכָה שֶׁלְּךָ."}, {"letter": "C", "text": "Straight downrange toward the target backstop.", "textHe": "יְשִׁירוֹת קָדִימָה לְכִיוּוּן חוֹמַת הַמִּפְגָּע שֶׁל הַמַּטָּרוֹת."}, {"letter": "D", "text": "Leftward at a 45-degree angle.", "textHe": "שְׂמֹאלָה בְּזָוִוית שֶׁל 45 מַעֲלוֹת."}], "correct": "C", "explanation": "At the range, the safe direction is downrange toward the backstop.", "questionHe": "לְפִי מִשְׁמַעַת קָנֶה, לְאָן כִּיוּוּן הַקָּנֶה הַבָּטוּחַ הַיְּחִידִי בַּמִּטְוָח?"}, {"number": 18, "question": "When can you place your finger inside the trigger guard?", "options": [{"letter": "A", "text": "Immediately upon unholstering.", "textHe": "מִיָּד עִם שְׁלִיפַת הַנֶּשֶׁק מֵהַנַּרְתִּיק."}, {"letter": "B", "text": "Only when sights are on target and you decide to shoot.", "textHe": "רַק כְּשֶׁהַכַּוָּנוֹת עַל הַמַּטָּרָה ו‌ְהֶחְלַטְתָּ לִירּוֹת."}, {"letter": "C", "text": "During a tactical malfunction clearing sequence.", "textHe": "בְּמַהֲלַךְ רֶצֶף תִּפְעוּל מַעֲצוֹר טַקְטִי."}, {"letter": "D", "text": "While moving between firing stalls.", "textHe": "תּוֹךְ כְּדֵי תְּנוּעָה בֵּין עֶמְדּוֹת הַיֶּרִי."}], "correct": "B", "explanation": "The finger enters the trigger guard only when the sights are on target and the decision to fire has been made.", "questionHe": "מָתַי מוּתָּר לְךָ לְהַכְנִיס אֶת הָאֶצְבַּע לְתוֹךְ שְׁמוּרַת הַהֶדֶק?"}, {"number": 19, "question": "Why must you identify what is behind your target?", "options": [{"letter": "A", "text": "To check for potential projectile ricochets.", "textHe": "כְּדֵי לִבְדֹּק נְטִיָּה לְרִיקוֹשֶׁטִים שֶׁל הַקְּלִיעַ."}, {"letter": "B", "text": "To calculate target distance accurately.", "textHe": "כְּדֵי לְהַשֵּׁב אֶת מֶרְחָק הַמַּטָּרָה בְּאֹפֶן מְדֻיָּק."}, {"letter": "C", "text": "To prevent stray rounds from hitting bystanders.", "textHe": "כְּדֵי לִמְנֹעַ מִכַּדּוּרִים טוֹעִים לִפְגֹּעַ בְּעוֹבְרֵי אֹרַח."}, {"letter": "D", "text": "To observe your spent brass landings.", "textHe": "כְּדֵי לְהִתְבּוֹנֵן בִּמְקוֹם נְחִיתַת הַתְּרָמִילִים שֶׁלְּךָ."}], "correct": "C", "explanation": "You must know the target and what lies behind it so a missed or penetrating round does not strike another person.", "questionHe": "מַדּוּעַ חָשֵׁב לְזַהוֹת מָה נִמְצָא מֵאֲחוֹרֵי הַמַּטָּרָה שֶׁלְּךָ?"}, {"number": 20, "question": "Before handing a gun to someone, what mechanical state must it be in?", "options": [{"letter": "A", "text": "Holstered with a live magazine inside.", "textHe": "בְּתוֹךְ הַנַּרְתִּיק עִם מַחְסָנִית מְלֵאָה בִּפְנִים."}, {"letter": "B", "text": "Slide locked open with chamber verified empty.", "textHe": "צִינָה נְעוּלָה לְאָחוֹר וּבֵית בְּלִיעָה מְאֻשָּׁר כְּרֵיק."}, {"letter": "C", "text": "Decocked with a single round in the chamber.", "textHe": "פַּטִּישׁ מוּרָד כַּאֲשֶׁר כַּדּוּר בּוֹדֵד נִמְצָא בַּקָּנֶה."}, {"letter": "D", "text": "Magazine removed but slide forward.", "textHe": "מַחְסָנִית בַּחוּץ אַךְ הַצִּינָה סְגוּרָה לְפָנִים."}], "correct": "B", "explanation": "A transferred firearm should have the slide locked open and the chamber visibly verified empty.", "questionHe": "לִפְנֵי מְסִירַת נֶשֶׁק לְמִישְׁהוּ, בְּאֵיזֶה מַצָּב מֶכָנִי הוּא חַיָּיב לִהְיוֹת?"}, {"number": 21, "question": "You verified a pistol is empty. Two minutes later, how do you handle it?", "options": [{"letter": "A", "text": "As an empty item that is harmless.", "textHe": "כְּאֶל חֵפֶץ רֵיק שֶׁאֵינוֹ מַזִּיק לְאִישׁ."}, {"letter": "B", "text": "As if it is fully loaded and ready to fire.", "textHe": "כְּאִלּוּ הוּא טָעוּן לַחֲלוּטִין וּמוּכָן לְיֶרִי."}, {"letter": "C", "text": "As a visual prop that requires no safety measures.", "textHe": "כְּאֶל אָבִיזָר חָזוּתִי שֶׁאֵינוֹ דּוֹרֵשׁ כְּלָלֵי בְּטִיחוּת."}, {"letter": "D", "text": "As a disabled tool that cannot cycle.", "textHe": "כְּאֶל כְּלִי מוּשְׁבָּת שֶׁאֵינוֹ יָכוֹל לִפְעֹל."}], "correct": "B", "explanation": "Safety rules still require treating the pistol as loaded, even after checking it.", "questionHe": "וִּדֵּאתָ פַּעֲמַיִם שֶׁאֶקְדָּח הוּא רֵיק. שְׁתֵּי דַּקּוֹת לְאַחַר מִכֵּן, כֵּיצַד תְּטַפֵּל בּוֹ?"}, {"number": 22, "question": "Where does your trigger finger rest when not pointing at targets?", "options": [{"letter": "A", "text": "Resting lightly on the trigger surface.", "textHe": "נָחָה בְּקַלּוּת עַל פְּנֵי שֶׁטַח הַהֶדֶק."}, {"letter": "B", "text": "Straight along the outer frame of the gun.", "textHe": "יְשָׁרָה לְאֹרֶךְ הַשִּׁלְדָּה הַחִיצוֹנִית שֶׁל הַנֶּשֶׁק."}, {"letter": "C", "text": "Curled inside the trigger guard space.", "textHe": "מְקֻפֶּלֶת בְּתוֹךְ חָלָל שְׁמוּרַת הַהֶדֶק."}, {"letter": "D", "text": "Wrapped under the base of the magazine.", "textHe": "עֲטוּפָה מִתַּחַת לְבָסִיס הַמַּחְסָנִית."}], "correct": "B", "explanation": "Keep the trigger finger straight along the frame, outside the trigger guard.", "questionHe": "הֵיכָן נָחָה אֶצְבַּע הַהֶדֶק שֶׁלְּךָ כְּשֶׁאֵינְךָ מְכַוֵּון לְמַטָּרוֹת?"}, {"number": 23, "question": "Muzzle control means that even if a weapon discharges accidentally:", "options": [{"letter": "A", "text": "The bullet will not fly past 5 meters total.", "textHe": "הַקְּלִיעַ לֹא יָעוּף מֵעֵבֶר לְ-5 מֶטְרִים בְּסַךְ הַכֹּל."}, {"letter": "B", "text": "The bullet will strike safely without harming a human.", "textHe": "הַקְּלִיעַ יִפְגַּע בְּבִטְחָה מִבְּלִי לִפְגֹּעַ בְּאָדָם."}, {"letter": "C", "text": "The internal firing pin catch will lock the slide.", "textHe": "תֶּפֶס הַנּוֹקֵר הַפְּנִימִי יִנְעֹל אֶת הַצִּינָה."}, {"letter": "D", "text": "The barrel rifling will contain the pressure trace.", "textHe": "סְלִילֵי הַקָּנֶה יַכִילוּ אֶת שְׁאֵרִית הַלַּחַץ."}], "correct": "B", "explanation": "Correct muzzle direction ensures an unintended discharge is directed where it will not injure a person.", "questionHe": "מִשְׁמַעַת קָנֶה פֵּרוּשָׁהּ שֶׁגַּם אִם נֶשֶׁק פּוֹלֵט כַּדּוּר בְּטָעוּת:"}, {"number": 24, "question": "Looking into the breech face, mag well, and chamber is part of:", "options": [{"letter": "A", "text": "Reassembly checking drills.", "textHe": "תִּרְגּוּלֵי בְּדִיקַת הַרְכָּבָה מִחָדָשׁ."}, {"letter": "B", "text": "Conducting a mandatory visual and physical safety inspection.", "textHe": "בִּצּוּעַ בִּקּוֹרֶת בְּטִיחוּת חָזוּתִית וּפִיזִית שֶׁל חוֹבָה."}, {"letter": "C", "text": "Aligning front dot site mechanisms.", "textHe": "כִּוּוּן מַנְגָּנוֹנֵי הַכַּוָּנוֹת הַקִּדְמִיִּים."}, {"letter": "D", "text": "Standard frame magazine cleaning paths.", "textHe": "מַסְלוּלֵי נִקּוּי רְגִילִים שֶׁל מַחְסָנִית הַשִּׁלְדָּה."}], "correct": "B", "explanation": "Those areas are checked during the mandatory visual and physical empty-gun inspection.", "questionHe": "הַבָּטָה בִּפְנֵי הַמִּכְלוֹל, בֵּית הַמַּחְסָנִית וּבֵית הַבְּלִיעָה הִיא חֵלֶק מִ:"}, {"number": 25, "question": "Before cleaning your private firearm, what is the absolute first action?", "options": [{"letter": "A", "text": "Spray oil directly down into the loaded chamber port.", "textHe": "רִסּוּס שֶׁמֶן יְשִׁירוֹת לְתוֹךְ פֶּתַח בֵּית הַבְּלִיעָה הַטָּעוּן."}, {"letter": "B", "text": "Remove the magazine, lock slide back, verify empty chamber.", "textHe": "הוֹצָאַת הַמַּחְסָנִית, נְעִילַת צִינָה, וִּידּוּא בֵּית בְּלִיעָה רֵיק."}, {"letter": "C", "text": "Pull the trigger downrange to click the hammer catch.", "textHe": "לְחִיצָה עַל הַהֶדֶק לְכִיוּוּן הַמַּטָּרוֹת לְשִׁחְרוּר הַפַּטִּישׁ."}, {"letter": "D", "text": "Wipe the outer polymer slide frame area with dry rags.", "textHe": "נִגּוּב אֵזוֹר שִׁלְדַּת הַצִּינָה הַחִיצוֹנִית בְּמַטְלִיּוֹת יְבֵשׁוֹת."}], "correct": "B", "explanation": "First remove the ammunition source, lock the slide open, and verify the chamber is empty.", "questionHe": "לִפְנֵי נִקּוּי נֶשֶׁק פְּרָטִי, מָהִי הַפְּעֻלָּה הָרִאשׁוֹנָה הַמֻּחְלֶטֶת?"}, {"number": 26, "question": "What must you do upon hearing the command \"Chedal!\" (חדל)?", "options": [{"letter": "A", "text": "Fire your remaining chambered round.", "textHe": "לִירּוֹת אֶת הַכַּדּוּר הָאַחֲרוֹן שֶׁנּוֹתַר בַּקָּנֶה."}, {"letter": "B", "text": "Stop shooting instantly, finger off trigger, muzzle downrange.", "textHe": "לַעֲצֹר אֶת הַיֶּרִי מִיָּד, אֶצְבַּע מִחוּץ לַהֶדֶק, קָנֶה לַמַּטָּרוֹת."}, {"letter": "C", "text": "Instantly drop the magazine and clear the weapon.", "textHe": "לְהַפִּיל מִיָּד אֶת הַמַּחְסָנִית וּלְפְרֹק אֶת הַנֶּשֶׁק."}, {"letter": "D", "text": "Turn around to face the range officer.", "textHe": "לְהִסְתּוֹבֵב לְאָחוֹר כְּדֵי לְהַבִּיט בִּמְנַהֵל הַמִּטְוָח."}], "correct": "B", "explanation": "Chedal means stop immediately, finger off the trigger, muzzle kept safely downrange.", "questionHe": "מָה עָלֶיךָ לַעֲשׂוֹת מִיָּד עִם שְׁמִיעַת הַפְּקֻדָּה \"חֲדַל!\"?"}, {"number": 27, "question": "Describe \"Matzav Gader!\" (מצב גדר) weapon alignment.", "options": [{"letter": "A", "text": "Gun holstered with hands placed on your ears.", "textHe": "נֶשֶׁק בַּנַּרְתִּיק כַּאֲשֶׁר הַיָּדַיִם מוּנָחוֹת עַל הָאָזְנַיִם."}, {"letter": "B", "text": "Gun held in both hands, angled 45 degrees downward downrange.", "textHe": "נֶשֶׁק מוּחְזָק בִּשְׁתֵּי יָדַיִם, בְּזָוִוית שֶׁל 45 מַעֲלוֹת כְּלַפֵּי מַטָּה קָדִימָה."}, {"letter": "C", "text": "Gun pointed up with manual safety clicked on.", "textHe": "נֶשֶׁק מֻפְנֶה כְּלַפֵּי Mַעְלָה כַּאֲשֶׁר הַנִּצְרָה הַמֶּכָנִית פְּעִילָה."}, {"letter": "D", "text": "Gun flat on the bench with slide locked back.", "textHe": "נֶשֶׁק שׁוֹכֵב עַל הַשֻּׁלְחָן כַּאֲשֶׁר הַצִּינָה נְעוּלָה לְאָחוֹר."}], "correct": "B", "explanation": "Matzav Gader is the two-handed ready position angled downward toward the safe downrange area.", "questionHe": "תָּאֵר אֶת כִּיוּוּן הַנֶּשֶׁק בְּ\"מַצָּב גָּדֵר!\"."}, {"number": 28, "question": "When the Range Officer orders \"Matzav Aretz!\" (מצב ארץ), where points the barrel?", "options": [{"letter": "A", "text": "Aligned on the center of the paper target.", "textHe": "מְכֻוּוּן לְמֶרְכַּז מַטָּרַת הַנְּיָר."}, {"letter": "B", "text": "Pointed directly downward at the firing line floor.", "textHe": "מֻפְנֶה יְשִׁירוֹת כְּלַפֵּי מַטָּה אֶל רִצְפַּת קַו הַיֶּרִי."}, {"letter": "C", "text": "Placed straight inside an approved security holster.", "textHe": "מוּנָח יָשָׁר בְּתוֹךְ נַרְתִּיק בְּטִיחוּת מְאֻשָּׁר."}, {"letter": "D", "text": "Pointed at the partition walls between lanes.", "textHe": "מֻפְנֶה אֶל קִירוֹת הַהַפְרָדָה שֶׁבֵּין עֶמְדּוֹת הַיֶּרִי."}], "correct": "B", "explanation": "Matzav Aretz directs the muzzle downward toward the ground/floor in front of the shooter.", "questionHe": "בְּ\"מַצָּב אֶרֶץ!\", לְאָן מֻפְנֶה קְנֵה הַנֶּשֶׁק?"}, {"number": 29, "question": "Who can command a safety \"Cease Fire\" on the range?", "options": [{"letter": "A", "text": "Only the chief inspector managing the facility.", "textHe": "רַק הַמְפַקֵּחַ הָרָאשִׁי הַמְנַהֵל אֶת הַמִּתְקָן."}, {"letter": "B", "text": "Only an active policeman visiting the line.", "textHe": "רַק שׁוֹטֵר פְּעִיל הַמְבַקֵּר בְּקַו הַיֶּרִי."}, {"letter": "C", "text": "Any individual who identifies a sudden safety hazard.", "textHe": "כָּל אָדָם הַמְזַהֶה סַכָּנַת בְּטִיחוּת פִּתְאוֹמִית."}, {"letter": "D", "text": "Only the range staff operating the targets.", "textHe": "רַק צֶוֶות הַמִּטְוָח הַמַּפְעִיל אֶת הַמַּטָּרוֹת."}], "correct": "C", "explanation": "Anyone who sees an immediate safety danger may call a cease fire.", "questionHe": "מִי רַשַּׁאי לִפְקֹד על \"חֲדַל!\" בְּטִיחוּתִי בַּמִּטְוָח?"}, {"number": 30, "question": "If you drop a live bullet while loading, you should:", "options": [{"letter": "A", "text": "Retrieve it immediately while keeping your gun up.", "textHe": "לֶאֱסֹף אוֹתוֹ מִיָּד תּוֹךְ כְּדֵי הַחְזָקַת הַנֶּשֶׁק לְפָנִים."}, {"letter": "B", "text": "Leave it until shooting stops and permission is given.", "textHe": "לְהַשְׁאִיר אוֹתוֹ עַל הָרִצְפָּה עַד סוֹף הַיֶּרִי וְקַבָּלַת אִישׁוּר."}, {"letter": "C", "text": "Kick it forward past the safety line barrier.", "textHe": "לִבְעֹט אוֹתוֹ קָדִימָה מֵעֵבֶר לְקַו הַיֶּרִי הַבָּטוּחַ."}, {"letter": "D", "text": "Call out loudly to warn surrounding lanes.", "textHe": "לִצְעֹק בְּקוֹל רָם כְּדֵי לְהַזְהִיר אֶת הָעֶמְדּוֹת הַסְּמוּכוֹת."}], "correct": "B", "explanation": "Do not bend or reach during active firing; leave it until firing stops and the instructor permits retrieval.", "questionHe": "אִם כַּדּוּר חַי נָפַל לְךָ בִּזְמַן הַטְעָנָה, עָלֶיךָ לְ:"}, {"number": 31, "question": "At an authorized range, who has the final say to clear you to fire?", "options": [{"letter": "A", "text": "Your fellow training classmates.", "textHe": "לַחְבֵרֶיךָ הַסְּטוּדֶנְטִים לַנֶּשֶׁק בַּכִּיתָה."}, {"letter": "B", "text": "The range master / range safety officer inside your section.", "textHe": "לְמִנְהַל הַמִּטְוָח / מְפַקֵּחַ הַבְּטִיחוּת בַּמָּדוֹר שֶׁלְּךָ."}, {"letter": "C", "text": "The private retail firearm store salesman.", "textHe": "לְמוֹכֵר חֲנוּת הַנֶּשֶׁק הַפְּרָטִית."}, {"letter": "D", "text": "The licensing office website portal clerk.", "textHe": "לִפְקִיד אֲתַר הָאִינְטֶרְנֶט שֶׁל אֲגַף הָרִשּׁוּי."}], "correct": "B", "explanation": "The range officer controls when firing may begin.", "questionHe": "בְּמִטְוָח מוּרְשֶׁה, לְמִי יֵשׁ אֶת הַמִּילָּה הָאַחֲרוֹנָה לְאַשֵּׁר לְךָ יֶרִי?"}, {"number": 32, "question": "If your ear protection falls off during active firing on the line:", "options": [{"letter": "A", "text": "Bend down immediately to grasp it while shooting.", "textHe": "הִתְכּוֹפֵף מִיָּד לִתְפֹּוס אוֹתָם תּוֹךְ כְּדֵי יֶרִי."}, {"letter": "B", "text": "Keep shooting to complete your required target counts.", "textHe": "הַמְשֵׁךְ לִירּוֹת כְּדֵי לְהַשְׁלִים אֶת מִכְסַת הַמַּטָּרוֹת."}, {"letter": "C", "text": "Signal \"Chedal\" to yourself and step backwards freely.", "textHe": "סַמֵּן 'חֲדַל' לְעַצְמְךָ וּפְסַע לְאָחוֹר בְּחֹופְשִׁי."}, {"letter": "D", "text": "Freeze muzzle downrange, finger off trigger, shout for assistance.", "textHe": "קְפָא עִם קָנֶה לַמַּטָּרוֹת, אֶצְבַּע מִחוּץ לַהֶדֶק, וּצְעַק לְעֶזְרָה."}], "correct": "D", "explanation": "Freeze safely, keep the muzzle downrange and finger off the trigger, and call for help.", "questionHe": "אִם מָגִנֵּי הָאָזְנַיִם שֶׁלְּךָ נוֹפְלִים בִּזְמַן יֶרִי פְּעִיל בַּקַּו:"}, {"number": 33, "question": "When walking into a range facility, your weapon must be:", "options": [{"letter": "A", "text": "Holstered, cocked, and completely loaded.", "textHe": "בַּנַּרְתִּיק, דָּרוּךְ וְטָעוּן לַחֲלוּטִין."}, {"letter": "B", "text": "Held out in your right hand to show transparency.", "textHe": "מוּחְזָק בְּיָדְךָ הַיְּמָנִית כְּדֵי לְהַרְאוֹת שְׁקִיפוּת."}, {"letter": "C", "text": "Unloaded, inside an approved carry case or holster layout.", "textHe": "פָּרוּק, בְּתוֹךְ תִּיק נְשִׂיאָה מְאֻשָּׁר אוֹ נַרְתִּיק תַּקִינָה."}, {"letter": "D", "text": "Disassembled into its primary barrel component pins.", "textHe": "מְפוֹרָק לְרְכִיבֵי פִּינֵי הַקָּנֶה הָרָאשִׁיִּים שֶׁלּוֹ."}], "correct": "C", "explanation": "The expected answer in this exam is unloaded and secured in an approved case or holster arrangement.", "questionHe": "בְּעֵת כְּנִיסָה לְמִתְחַם מִטְוָח, הַנֶּשֶׁק שֶׁלְּךָ חַיָּיב לִהְיוֹת:"}, {"number": 34, "question": "If you suspect a bullet is stuck inside the barrel (Squib Load), you should:", "options": [{"letter": "A", "text": "Perform Tap-Rack-Assess instantly and continue firing.", "textHe": "לְבַצֵּעַ 'נָחוּשׁ-דָּרוּךְ-בְּחַן' מִיָּד וּלְהַמְשֵׁךְ בַּיֶּרִי."}, {"letter": "B", "text": "Look straight down the front muzzle tip option.", "textHe": "לְהַבִּיט יְשִׁירוֹת מִלְּפָנִים לְתוֹךְ קְצֵה הַקָּנֶה."}, {"letter": "C", "text": "Stop firing immediately, maintain muzzle control, notify instructor.", "textHe": "לַעְצֹר אֶת הַיֶּרִי מִיָּד, לִשְׁמֹר עַל מִשְׁמַעַת קָנֶה, וּלְהוֹדִיעַ לַמַּדְרִיךְ."}, {"letter": "D", "text": "Shake the frame until the barrel slide drops off.", "textHe": "לְנַעֵר אֶת הַשִּׁלְדָּה עַד שֶׁצִּינַת הַקָּנֶה תִּפֹּול."}], "correct": "C", "explanation": "A suspected squib can obstruct the barrel; stop firing and notify the instructor.", "questionHe": "אִם אַתָּה חוֹשֵׁד שֶׁקְּלִיעַ נִתְקַע בְּתוֹךְ הַקָּנֶה (כַּדּוּר נָמוּךְ), עָלֶיךָ לְ:"}, {"number": 35, "question": "Turning around on the firing line while holding a weapon is:", "options": [{"letter": "A", "text": "Permitted if the slide assembly is fully forward.", "textHe": "מוּתֶּרֶת אִם מִכְלוֹל הַצִּינָה נִמְצָא לְפָנִים לַחֲלוּטִין."}, {"letter": "B", "text": "A severe safety violation that flags other lanes unlawfully.", "textHe": "עֲבֵירָת בְּטִיחוּת חֲמוּרָה הַמְכַוֶּוֹנֶת קָנֶה לְעֶמְדּוֹת אֲחֵרוֹת שֶׁלֹּא כַּדִּין."}, {"letter": "C", "text": "Proper practice when speaking directly to range office peers.", "textHe": "פְּעֻלָּה תַּקִינָה כְּשֶׁמְּדַבְּרִים יְשִׁירוֹת עִם עֲמִיתֵי הַמִּטְוָח."}, {"letter": "D", "text": "Allowed if you click your manual safety frame off.", "textHe": "מוּתֶּרֶת אִם אַתָּה מְנַתֵּק אֶת נִצְרַת הַשִּׁלְדָּה הַיְּדָנִית."}], "correct": "B", "explanation": "Turning can sweep other people with the muzzle and is a major safety violation.", "questionHe": "הִסְתּוֹבְבוּת לְאָחוֹר בְּקַו הַיֶּרִי תּוֹךְ כְּדֵי הַחְזָקַת נֶשֶׁק הִיא:"}, {"number": 36, "question": "Which pistol part cycles to eject brass and feed new rounds?", "options": [{"letter": "A", "text": "The Barrel (קָנֶה).", "textHe": "הַקָּנֶה."}, {"letter": "B", "text": "The Slide (צִינָה).", "textHe": "הַצִּינָה."}, {"letter": "C", "text": "The Trigger Guard (שְׁמוּרַת הַהֶדֶק).", "textHe": "שְׁמוּרַת הַהֶדֶק."}, {"letter": "D", "text": "The Grip Frame (כַּתָּת).", "textHe": "הַכַּתָּת."}], "correct": "B", "explanation": "The slide reciprocates to extract/eject the fired case and chamber the next round.", "questionHe": "אֵיזֶה חֵלֶק בָּאֶקְדָּח נָע כְּדֵי לִפְלוֹט תְּרָמִילִים וּלְהָזִין כַּדּוּרִים?"}, {"number": 37, "question": "What is the primary purpose of the Trigger Guard?", "options": [{"letter": "A", "text": "To hold the magazine spring component.", "textHe": "לְהַחְזִיק אֶת קְפִיץ הַמַּחְסָנִית."}, {"letter": "B", "text": "To house the rear aiming iron sights.", "textHe": "לְאַכְסֵן אֶת הַכַּוָּנוֹת הָאֲחוֹרִיּוֹת."}, {"letter": "C", "text": "To protect the trigger from accidental movement.", "textHe": "לְהָגֵן עַל הַהֶדֶק מִפְּנֵי תְּנוּעָה מִקְרִית."}, {"letter": "D", "text": "To stabilize your thumb during double-action.", "textHe": "לְיַצֵּב אֶת הָאָגוּדָל בִּזְמַן פְּעֻלָּה כְּפוּלָה."}], "correct": "C", "explanation": "The trigger guard protects the trigger against unintended contact.", "questionHe": "מָהִי הַמַּטָּרָה הָעִיקָרִית שֶׁל שְׁמוּרַת הַהֶדֶק?"}, {"number": 38, "question": "What mechanical function does the \"Noker\" fulfill?", "options": [{"letter": "A", "text": "It catches and holds the slide assembly back.", "textHe": "הוּא תּוֹפֵס וּמַחְזִיק אֶת מִכְלוֹל הַצִּינָה לְאָחוֹר."}, {"letter": "B", "text": "It strikes the primer to ignite the gunpowder propellant.", "textHe": "הוּא מַכֶּה בְּפִיקַת הַכַּדּוּר כְּדֵי לְהַצִּית אֶת אֲבַק הַשְּׂרֵפָה."}, {"letter": "C", "text": "It pulls spent brass cases out of the chamber.", "textHe": "הוּא שׁוֹלֵף תְּרָמִילִים מְשֻׁמָּשִׁים מִבֵּית הַבְּלִיעָה."}, {"letter": "D", "text": "It guides the frame along internal rails.", "textHe": "הוּא מְכַוֵּון אֶת הַשִּׁלְדָּה לְאֹרֶךְ מְסִלּוֹת פְּנִימִיּוֹת."}], "correct": "B", "explanation": "The firing pin/striker hits the primer to initiate ignition.", "questionHe": "אֵיזֶה תַּפְקִיד מֶכָנִי מְמַלֵּא הַ'נּוֹקֵר'?"}, {"number": 39, "question": "What is the definition of \"Beit Bli'a\" (בית בליעה)?", "options": [{"letter": "A", "text": "The internal channel of a polymer mag frame.", "textHe": "הַתְּעָלָה הַפְּנִימִית שֶׁל גּוּף הַמַּחְסָנִית."}, {"letter": "B", "text": "The rear portion of the barrel where a cartridge sits.", "textHe": "הַחֵלֶק הָאֲחוֹרִי שֶׁל הַקָּנֶה בּוֹ יוֹשֵׁב הַכַּדּוּר."}, {"letter": "C", "text": "The bottom magazine entry port.", "textHe": "פֶּתַח כְּנִיסַת הַמַּחְסָנִית הַתַּחְתּוֹן."}, {"letter": "D", "text": "The site sight track across the upper slide.", "textHe": "מְסִילַּת הַכַּוָּנוֹת לְאֹרֶךְ הַצִּינָה הָעֶלְיוֹנִית."}], "correct": "B", "explanation": "Beit Bli’a is the chamber—the rear barrel area where the cartridge sits.", "questionHe": "מָהוּ הַהַגְדָּרָה שֶׁל 'בֵּית הַבְּלִיעָה'?"}, {"number": 40, "question": "What is the mechanical role of the Magazine Catch button?", "options": [{"letter": "A", "text": "To feed a single cartridge upward into the chamber lip.", "textHe": "לְהָזִין כַּדּוּר בּוֹדֵד כְּלַפֵּי מַעְלָה אֶל שְׂפַת בֵּית הַבְּלִיעָה."}, {"letter": "B", "text": "To physically unlock and release the ammunition magazine.", "textHe": "לִפְתֹּוחַ מֶכָנִית וּלְשַׁחְרֵר אֶת מַחְסָנִית הַתַּחְמוּשָׁה."}, {"letter": "C", "text": "To lock the upper frame slide back onto its internal seat.", "textHe": "לִנְעֹל אֶת הַצִּינָה הָעֶלְיוֹנִית לְאָחוֹר עַל תּוֹשַׁבְתָּהּ הַפְּנִימִית."}, {"letter": "D", "text": "To adjust trigger compression during single-action.", "textHe": "לְכַוֵּון אֶת דְּחִיסַת הַהֶדֶק בְּמַהֲלַךְ פְּעֻלָּה בּוֹדֶדֶת."}], "correct": "B", "explanation": "The magazine catch unlocks and releases the magazine.", "questionHe": "מָהוּ הַתַּפְקִיד הַמֶּכָנִי שֶׁל לַחְצַן תֶּפֶס הַמַּחְסָנִית?"}, {"number": 41, "question": "The component that pulls the empty casing out of the chamber is:", "options": [{"letter": "A", "text": "The Extractor / Hook (חוֹלֵץ).", "textHe": "הַחוֹלֵץ."}, {"letter": "B", "text": "The Front Sight Post (כַּוָּנָת קִדְמִית).", "textHe": "הַכַּוָּנָת הַקִּדְמִית."}, {"letter": "C", "text": "The Recoil Spring Guide Rod (מוֹט מוֹבִיל קְפִיץ).", "textHe": "מוֹט מוֹבִיל הַקְּפִיץ."}, {"letter": "D", "text": "The Magazine Base Pad (עָקֵב מַחְסָנִית).", "textHe": "עֵקֶב הַמַּחְסָנִית."}], "correct": "A", "explanation": "The extractor hook pulls the fired case from the chamber.", "questionHe": "הָרְכִיב שֶׁמּוֹשֵׁךְ אֶת הַתַּרְמִיל הָרֵיק מִבֵּית הַבְּלִיעָה הוּא:"}, {"number": 42, "question": "The internal wall design inside a barrel that spins the bullet is:", "options": [{"letter": "A", "text": "Polymer frame slide track channels.", "textHe": "תְּעָלוֹת מַסְלוּל הַצִּינָה שֶׁל שִׁלְדַּת הַפולימר."}, {"letter": "B", "text": "Rifling groves (סְלִילִים).", "textHe": "סְלִילִים."}, {"letter": "C", "text": "Chamber feed lips properties.", "textHe": "מַאֲפְיָנֵי שִׂפְתֵי הַהֲזָנָה שֶׁל בֵּית הַבְּלִיעָה."}, {"letter": "D", "text": "Striker firing pin safety blocks.", "textHe": "מַחְסוֹמֵי אַבְטָחַת נוֹקֵר הַהֶדֶק הפְּנִימִיִּים."}], "correct": "B", "explanation": "Rifling grooves spin the bullet for stability.", "questionHe": "מַבְנֵה הַקִּיר הַפְּנִימִי בְּתוֹךְ קָנֶה הַמְּסוֹבֵב אֶת הַקְּלִיעַ הוּא:"}, {"number": 43, "question": "While carrying a private firearm daily in public, the weapon should be:", "options": [{"letter": "A", "text": "Held openly in your hand to deter criminals.", "textHe": "מוּחְזָק גָּלוּי בְּיָדְךָ כְּדֵי לְהַרְתִּיעַ עַבְרְיָנִים."}, {"letter": "B", "text": "Secured in an approved holster on your person.", "textHe": "מאוּבְטָח בְּתוֹךְ נַרְתִּיק מְאֻשָּׁר עַל גּוּפְךָ."}, {"letter": "C", "text": "Kept loose inside an unzipped backpack.", "textHe": "מוּנָח חוֹפְשִׁי בְּתוֹךְ תִּיק גַּב פָּתוּחַ."}, {"letter": "D", "text": "Tucked into your front waistband without a holster.", "textHe": "תָּחוּב בַּחֲגוֹרַת הַמִּכְנָסַיִם הַקִּדְמִית לְלֹא נַרְתִּיק."}], "correct": "B", "explanation": "The firearm should be secured in a proper holster on the carrier.", "questionHe": "בִּזְמַן נְשִׂיאַת נֶשֶׁק פְּרָטִי בְּיוֹם-יוֹם בְּצִבּוּר, עַל הַנֶּשֶׁק לִהְיוֹת:"}, {"number": 44, "question": "What is the primary purpose of the extractor (חולץ) component?", "options": [{"letter": "A", "text": "To lock the magazine into the base of the frame.", "textHe": "לִנְעֹל אֶת הַמַּחְסָנִית אֶל בָּסִיס הַשִּׁלְדָּה."}, {"letter": "B", "text": "To ignite the primer mixture when the trigger is pulled.", "textHe": "לְהַצִּית אֶת תַּעֲרֹובֶת הַפִּיקָה בִּסְחִיטַת הַהֶדֶק."}, {"letter": "C", "text": "To pull the spent casing out of the chamber window.", "textHe": "לִמְשֹׁוךְ אֶת הַתַּרְמִיל הַמְּשֻׁמָּשׁ מִתּוֹךְ בֵּית הַבְּלִיעָה."}, {"letter": "D", "text": "To push the slide forward into full battery.", "textHe": "לִדְחֹוֹף אֶת הַצינָה לְפָנִים לִסְגִירָה מְלֵאָה."}], "correct": "C", "explanation": "The extractor removes the spent casing from the chamber.", "questionHe": "מָהִי הַמַּטָּרָה הָעִיקָרִית שֶׁל רְכִיב הַחוֹלֵץ (Extractor)?"}, {"number": 45, "question": "If you run out of ammunition during fire, the slide will typically:", "options": [{"letter": "A", "text": "Fly completely off the front of the frame rails.", "textHe": "תָּעוּף לַחֲלוּטִין מֵהַנֶּשֶׁק מֵעַל מְסִילּוֹת הַשִּׁלְדָּה."}, {"letter": "B", "text": "Jam sideways and prevent the magazine from releasing.", "textHe": "תִּתְקַע עָקֹם וְתִמְנַע אֶת שִׁחְרוּר הַמַּחְסָנִית."}, {"letter": "C", "text": "Lock open to the rear via the slide stop lever.", "textHe": "תִּנָּעֵל פְּתוּחָה לְאָחוֹר בְּאֶמְצָעוּת עֶצֶר הַמַּחְלֵק."}, {"letter": "D", "text": "Go fully forward on an empty chamber automatically.", "textHe": "תַּחְזֹר לְפָנִים מָלֵא עַל בֵּית בְּלִיעָה רֵיק בְּאֹפֶן אוֹטוֹמָטִי."}], "correct": "C", "explanation": "On most semi-automatic pistols, the follower engages the slide stop after the last round.", "questionHe": "אִם נִגְמְרָה לְךָ הַתַּחְמוּשָׁה בִּזְמַן יֶרִי, הַצִּינָה בְּדֶרֶךְ כְּלָל:"}, {"number": 46, "question": "Modifying the internal trigger mechanism of a licensed weapon is:", "options": [{"letter": "A", "text": "Highly recommended to make the shooting weight lighter.", "textHe": "מוּמלָץ מְאֹד כְּדֵי לְהָקֵל עַל מִשְׁקַל הַסְּחִיטָה."}, {"letter": "B", "text": "Legal as long as it is done by the firearm license owner.", "textHe": "חוּקִי כָּל עוֹד זֶה מְבֻצָּע עַל יְדֵי בַּעַל הָרִישָׁיוֹן עַצְמוֹ."}, {"letter": "C", "text": "Strictly forbidden unless performed by an authorized armorer.", "textHe": "אָסוּר בְּהֶחְלֵט אֶלָּא אִם כֵּן מְבֻצָּע עַל יְדֵי נַשָּׁק מוּסְמָךְ."}, {"letter": "D", "text": "Allowed if you only carry the weapon inside your home.", "textHe": "מוּתָּר אִם אַתָּה נוֹשֵׂא אֶת הַנֶּשֶׁק רַק בְּתוֹךְ בֵּיתְךָ."}], "correct": "C", "explanation": "Internal trigger work should be performed only by an authorized professional under the rules applicable to the weapon.", "questionHe": "שִׁינּוּי מַנְגָּנוֹן הַהֶדֶק הַפְּנִימִי שֶׁל נֶשֶׁק מֻרְשֶׁה הוּא:"}, {"number": 47, "question": "Why is it forbidden to look directly down the muzzle of a gun?", "options": [{"letter": "A", "text": "It violates basic range protocol guidelines.", "textHe": "זֶה נוֹגֵד אֶת הַנְחָיוֹת פְּרוֹטוֹקוֹל הַמִּטְוָח הַבְּסִיסִיּוֹת."}, {"letter": "B", "text": "Stray light entering the barrel damages targeting sights.", "textHe": "קַרְנֵי אוֹר הַנִּכְנָסוֹת לַקָּנֶה הוֹרְסוֹת אֶת כַּוָּנוֹת הַיֶּרִי."}, {"letter": "C", "text": "It violates the iron rule of never flagging a human body part.", "textHe": "זֶה מֵפֵר אֶת חֹק הַבַּרְזֶל שֶׁל לְעוֹלָם לֹא לְכַוֵּון מוּל אֵיבָר גּוּף."}, {"letter": "D", "text": "Dust from the rifling can irritate your vision.", "textHe": "אָבָק מִסְלִילֵי הַקָּנֶה עָלוּל לִגְרֹום לְגֵרוּי בָּעֵינַיִם."}], "correct": "C", "explanation": "Looking down the muzzle points the barrel at part of your body, violating a fundamental safety rule.", "questionHe": "מַדּוּעַ אָסוּר לְהַבִּיט יְשִׁירוֹת לְתוֹךְ קְנֵה הַנֶּשֶׁק?"}, {"number": 48, "question": "If you find an unfamiliar firearm in a public space, you must:", "options": [{"letter": "A", "text": "Pick it up carefully, clear it, and take it home.", "textHe": "לְהָרִים אוֹתוֹ בִּזְהִירוּת, לִפְרֹוק וּלְקַחַת אוֹתוֹ לְבֵיתְךָ."}, {"letter": "B", "text": "Leave it alone, clear the area, and call the Police (100).", "textHe": "לֹא לִגַּע בּוֹ, לְהַרְחִיק עּוֹבְרֵי אֹרַח וּלְחַיֵּיג לַמִּשְׁטָרָה (100)."}, {"letter": "C", "text": "Try to look for the owner around the immediate area.", "textHe": "לְנַסּוֹת לְחַפֵּשׂ אֶת הַבְּעָלִים בַּסְּבִיבָה הַקְּרוֹבָה."}, {"letter": "D", "text": "Pick it up and carry it to the nearest security guard.", "textHe": "לְהָרִים אוֹתוֹ וְלָקַחַת אוֹתוֹ לְמַאֲבְטֵחַ הַקָּרוֹב בְּיוֹתֵר."}], "correct": "B", "explanation": "Do not handle an unfamiliar firearm; clear people away and call Police.", "questionHe": "אִם מָצָאתָ כְּלִי נֶשֶׁק לֹא מוּכָּר בְּמָקוֹם צִבּוּרִי, עָלֶיךָ לְ:"}, {"number": 49, "question": "What is the main structural danger of a rusted barrel (קנה חלוד)?", "options": [{"letter": "A", "text": "It makes the physical slide pull significantly heavier.", "textHe": "הוּא הוֹפֵךְ אֶת מְשִׁיכַת הַצִּינָה לִכְבֵדָה בְּאֹפֶן מַשְׁמָעוּתִי."}, {"letter": "B", "text": "It blocks the magazine button from unlocking properly.", "textHe": "הוּא חוֹסֵם אֶת לַחְצַן הַמַּחְסָנִית מִלְּהִשְׁתַּחְרֵר כָּרָאוּי."}, {"letter": "C", "text": "It can cause dangerous chamber pressures or barrel failure.", "textHe": "הוּא עָלוּל לִגְרֹום לְלַחַץ חָרִיג בְּבֵית הַבְּלִיעָה אוֹ לְפִיצוּץ הַקָּנֶה."}, {"letter": "D", "text": "It shifts the zero of the aiming rear sights permanently.", "textHe": "הוּא מֵזִיז אֶת אִיּוּס כַּוָּנוֹת הַיֶּרִי הָאֲחוֹרִיּוֹת לִצְמיתוּת."}], "correct": "C", "explanation": "Rust or obstruction can weaken the barrel or create dangerous pressure.", "questionHe": "מָהִי הַסַּכָּנָה הַמִּבְנִית הָעִיקָרִית שֶׁל קָנֶה חָלוּד?"}, {"number": 50, "question": "At the firing line, you are allowed to load ammunition only when:", "options": [{"letter": "A", "text": "You have finished placing your ear protection on.", "textHe": "סִיַּימְתָּ לָשִׂים אֶת מָגִנֵּי הָאָזְנַיִם שֶׁלְּךָ."}, {"letter": "B", "text": "You step inside the partitioned metal shooting stall.", "textHe": "נִכְנַסְתָּ לְתוֹךְ תָּא הַיֶּרִי הַמֻּפְרָד מִמַּתֶּכֶת."}, {"letter": "C", "text": "The Range Officer gives explicit verbal command to load.", "textHe": "מְנַהֵל הַמִּטְוָח נוֹתֵן פְּקֻדָּה מִילּוּלִית מְפֹוֹרֶשֶׁת לִטְעֹן."}, {"letter": "D", "text": "Your targets have been checked and cleared by you.", "textHe": "הַמַּטָּרוֹת שֶׁלְּךָ נִבְדְּקוּ וּפֻנּוּ עַל יָדְךָ."}], "correct": "C", "explanation": "Loading begins only on the range officer’s explicit command.", "questionHe": "בְּקַו הַיֶּרִי, מוּתָּר לְךָ לִטְעֹן תַּחְמֹשֶׁת אַךְ וְרַק כַּאֲשֶׁר:"}];
+let questions = [];
+let index = 0;
+let correctCount = 0;
+let answered = false;
+let missed = [];
+let language = localStorage.getItem('quizLanguage') || 'both';
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function setLanguage(value) {
+  language = value;
+  localStorage.setItem('quizLanguage', value);
+  updateLanguageButtons();
+  if (!document.getElementById('quiz').classList.contains('hidden')) render();
+  else showResults();
+}
+
+function updateLanguageButtons() {
+  document.querySelectorAll('#languageControls button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === language);
+  });
+}
+
+function questionHtml(q) {
+  if (language === 'en') return escapeHtml(q.question);
+  if (language === 'he') return `<div class="he">${escapeHtml(q.questionHe)}</div>`;
+  return `<div class="both-block"><span class="lang-label">ENGLISH</span>${escapeHtml(q.question)}</div>
+          <div class="both-block he"><span class="lang-label">עברית</span>${escapeHtml(q.questionHe)}</div>`;
+}
+
+function optionHtml(opt) {
+  if (language === 'en') {
+    return `<div class="option-row"><span class="letter">${opt.letter}</span>
+      <span class="option-text">${escapeHtml(opt.text)}</span></div>`;
+  }
+  if (language === 'he') {
+    return `<div class="option-row"><span class="letter">${opt.letter}</span>
+      <span class="option-text he">${escapeHtml(opt.textHe)}</span></div>`;
+  }
+  return `<div class="option-row"><span class="letter">${opt.letter}</span>
+    <span class="option-text"><div>${escapeHtml(opt.text)}</div>
+    <div class="option-he">${escapeHtml(opt.textHe)}</div></span></div>`;
+}
+
+function shuffled(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function restart(doShuffle=false) {
+  questions = doShuffle ? shuffled(MASTER) : [...MASTER];
+  index = 0; correctCount = 0; answered = false; missed = [];
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  updateLanguageButtons();
+  render();
+}
+
+function render() {
+  answered = false;
+  const q = questions[index];
+  document.getElementById('counter').textContent = `Question ${index+1} of ${questions.length}`;
+  document.getElementById('score').textContent = `Score: ${correctCount}`;
+  document.getElementById('bar').style.width = `${(index/questions.length)*100}%`;
+  document.getElementById('question').innerHTML = questionHtml(q);
+
+  const options = document.getElementById('options');
+  options.innerHTML = '';
+  q.options.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.innerHTML = optionHtml(opt);
+    b.onclick = () => choose(opt.letter, b);
+    options.appendChild(b);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+  document.getElementById('next').classList.add('hidden');
+}
+
+function choose(letter, button) {
+  if (answered) return;
+  answered = true;
+  const q = questions[index];
+  const buttons = [...document.querySelectorAll('.option')];
+
+  buttons.forEach(b => {
+    b.disabled = true;
+    if (b.querySelector('.letter').textContent === q.correct) b.classList.add('correct');
+  });
+
+  const fb = document.getElementById('feedback');
+  if (letter === q.correct) {
+    correctCount++;
+    fb.className = 'feedback good';
+    fb.innerHTML = `<strong>✓ Correct / נכון</strong><br>${escapeHtml(q.explanation)}`;
+  } else {
+    button.classList.add('wrong');
+    missed.push({...q, selected:letter});
+    fb.className = 'feedback bad';
+    fb.innerHTML = `<strong>✗ Incorrect / לא נכון — ${q.correct}</strong><br>${escapeHtml(q.explanation)}`;
+  }
+
+  document.getElementById('score').textContent = `Score: ${correctCount}`;
+  const next = document.getElementById('next');
+  next.textContent = index === questions.length - 1 ? 'See results' : 'Next question';
+  next.classList.remove('hidden');
+}
+
+function nextQuestion() {
+  if (index < questions.length - 1) {
+    index++; render(); window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    showResults();
+  }
+}
+
+function displayReviewQuestion(q) {
+  if (language === 'en') return escapeHtml(q.question);
+  if (language === 'he') return `<span class="he">${escapeHtml(q.questionHe)}</span>`;
+  return `${escapeHtml(q.question)}<br><span class="he">${escapeHtml(q.questionHe)}</span>`;
+}
+
+function displayReviewOption(opt) {
+  if (language === 'en') return escapeHtml(opt.text);
+  if (language === 'he') return `<span class="he">${escapeHtml(opt.textHe)}</span>`;
+  return `${escapeHtml(opt.text)}<br><span class="he">${escapeHtml(opt.textHe)}</span>`;
+}
+
+function showResults() {
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+
+  const pct = Math.round((correctCount/questions.length)*100);
+  document.getElementById('scoreBig').textContent = `${correctCount} / ${questions.length}`;
+  document.getElementById('resultText').textContent =
+    `${pct}% — You missed ${missed.length} question${missed.length===1?'':'s'}.`;
+  document.getElementById('missedBtn').classList.toggle('hidden', missed.length===0);
+
+  const review = document.getElementById('review');
+  review.innerHTML = missed.length ? '<h3>Questions to review</h3>' : '<p>Excellent—no missed questions.</p>';
+
+  missed.forEach(q => {
+    const d = document.createElement('div');
+    d.className = 'review-item';
+    const right = q.options.find(o => o.letter === q.correct);
+    const chosen = q.options.find(o => o.letter === q.selected);
+    d.innerHTML = `<strong>Q${q.number}. ${displayReviewQuestion(q)}</strong>
+      <div>Your answer: ${q.selected} — ${displayReviewOption(chosen)}</div>
+      <div>Correct: ${q.correct} — ${displayReviewOption(right)}</div>`;
+    review.appendChild(d);
+  });
+
+  updateLanguageButtons();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startMissed() {
+  if (!missed.length) return;
+  questions = missed.map(q => {
+    const copy = {...q};
+    delete copy.selected;
+    return copy;
+  });
+  index=0; correctCount=0; answered=false; missed=[];
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  render();
+}
+
+updateLanguageButtons();
+restart(false);
+</script>
+</body>
+</html>
