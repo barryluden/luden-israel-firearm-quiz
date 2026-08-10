@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Israel Firearm License Practice Quiz – Exam 5</title>
+<style>
+:root {
+  --bg:#f4f6f8; --card:#fff; --text:#15202b; --muted:#667085;
+  --accent:#165dff; --good:#067647; --bad:#b42318; --line:#d0d5dd;
+}
+* { box-sizing:border-box; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:var(--bg); color:var(--text); }
+.wrap { max-width:780px; margin:auto; padding:18px 14px 40px; }
+header { text-align:center; padding:8px 8px 14px; }
+h1 { font-size:24px; margin:4px 0 8px; }
+.sub { color:var(--muted); font-size:14px; line-height:1.4; }
+.card { background:var(--card); border-radius:18px; padding:20px;
+  box-shadow:0 5px 22px rgba(16,24,40,.08); }
+.toprow { display:flex; justify-content:space-between; gap:10px; color:var(--muted);
+  font-weight:600; font-size:14px; }
+.progress { height:9px; background:#e4e7ec; border-radius:99px;
+  overflow:hidden; margin:12px 0 22px; }
+.bar { height:100%; width:0; background:var(--accent); transition:width .25s ease; }
+.question { font-size:21px; font-weight:750; line-height:1.42; margin-bottom:18px; }
+.he { direction:rtl; text-align:right; font-family:Arial,"Noto Sans Hebrew",sans-serif; }
+.both-block + .both-block { margin-top:10px; padding-top:10px; border-top:1px solid #eaecf0; }
+.lang-label { display:block; color:var(--muted); font-size:11px; font-weight:800;
+  letter-spacing:.04em; margin-bottom:4px; }
+.options { display:grid; gap:11px; }
+.option { width:100%; text-align:left; padding:14px; border:2px solid var(--line);
+  border-radius:14px; background:white; font-size:16px; line-height:1.4; cursor:pointer; }
+.option .letter { display:inline-grid; place-items:center; width:27px; height:27px;
+  border-radius:50%; border:1px solid #98a2b3; margin-right:9px; font-weight:700;
+  vertical-align:top; flex:0 0 auto; }
+.option-row { display:flex; align-items:flex-start; }
+.option-text { flex:1; }
+.option-he { direction:rtl; text-align:right; margin-top:7px; padding-top:7px;
+  border-top:1px dashed #d0d5dd; }
+.option.correct { border-color:var(--good); background:#ecfdf3; }
+.option.wrong { border-color:var(--bad); background:#fef3f2; }
+.option:disabled { cursor:default; color:inherit; }
+.feedback { display:none; margin-top:18px; padding:15px; border-radius:13px; line-height:1.5; }
+.feedback.good { display:block; color:#05603a; background:#ecfdf3; }
+.feedback.bad { display:block; color:#912018; background:#fef3f2; }
+.actions { display:flex; gap:10px; margin-top:18px; }
+button.action { flex:1; border:0; border-radius:12px; padding:14px; font-size:16px;
+  font-weight:700; cursor:pointer; }
+.primary { background:var(--accent); color:white; }
+.secondary { background:#e4e7ec; color:#344054; }
+.hidden { display:none !important; }
+.results h2 { font-size:28px; margin:0 0 8px; }
+.scorebig { font-size:46px; font-weight:800; margin:10px 0; }
+.review-item { border-top:1px solid #eaecf0; padding:15px 0; }
+.review-item strong { display:block; margin-bottom:6px; }
+.notice { margin-top:14px; font-size:12px; color:var(--muted); text-align:center; line-height:1.4; }
+.controls { margin:12px 0 0; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+.controls button { border:1px solid var(--line); background:#fff; border-radius:999px;
+  padding:9px 13px; font-weight:700; cursor:pointer; }
+.controls button.active { background:var(--accent); color:white; border-color:var(--accent); }
+.control-title { width:100%; color:var(--muted); font-size:12px; font-weight:700; margin-top:4px; }
+@media (prefers-color-scheme:dark) {
+ :root { --bg:#101828; --card:#1d2939; --text:#f2f4f7; --muted:#98a2b3; --line:#475467; }
+ .option { background:#1d2939; color:#f2f4f7; }
+ .secondary { background:#344054; color:white; }
+ .controls button { background:#1d2939; color:white; }
+ .both-block + .both-block, .option-he { border-color:#475467; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Israel Firearm License Practice Quiz – Exam 5</h1>
+<div class="sub">20 questions · English, Hebrew, or both · immediate feedback</div>
+
+<div class="controls" id="languageControls">
+<div class="control-title">Display language</div>
+<button data-lang="en" onclick="setLanguage('en')">English</button>
+<button data-lang="he" onclick="setLanguage('he')">עברית</button>
+<button data-lang="both" onclick="setLanguage('both')">Both</button>
+</div>
+
+<div class="controls">
+<div class="control-title">Quiz order</div>
+<button onclick="restart(false)">Restart in order</button>
+<button onclick="restart(true)">Shuffle questions</button>
+</div>
+</header>
+
+<section id="quiz" class="card">
+<div class="toprow"><span id="counter"></span><span id="score"></span></div>
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="question" class="question"></div>
+<div id="options" class="options"></div>
+<div id="feedback" class="feedback"></div>
+<div class="actions">
+<button id="next" class="action primary hidden" onclick="nextQuestion()">Next question</button>
+</div>
+</section>
+
+<section id="results" class="card results hidden">
+<h2>Quiz complete</h2>
+<div id="scoreBig" class="scorebig"></div>
+<div id="resultText"></div>
+<div class="actions">
+<button class="action primary" onclick="restart(true)">Try again shuffled</button>
+<button id="missedBtn" class="action secondary" onclick="startMissed()">Review missed</button>
+</div>
+<div id="review"></div>
+</section>
+
+<div class="notice">
+Practice material based on the photographed Exam No. 5 you supplied—not an official licensing examination or legal advice.
+Always follow the live instructions of the licensed range officer.
+</div>
+</div>
+
+<script>
+const MASTER = [{"number": 1, "question": "Where is firearm training permitted to be conducted?", "questionHe": "היכן מותר לבצע אימון בנשק?", "options": [{"letter": "A", "text": "Facing a safe backstop, in a place with no people present, under the supervision of a firearms instructor.", "textHe": "מול חומת מפגע, במקום ללא אנשים, בפיקוח מדריך ירי."}, {"letter": "B", "text": "In any place where no people are present.", "textHe": "במקום ללא אנשים."}, {"letter": "C", "text": "Only at an authorized shooting range, under the supervision of a firearms instructor / range officer.", "textHe": "במטווח מאושר בלבד, בפיקוח מדריך ירי / מפקח מטווח."}, {"letter": "D", "text": "All answers are correct.", "textHe": "כל התשובות נכונות."}], "correct": "C", "explanation": "The intended answer on this test is C: training is conducted only at an authorized range under proper supervision."}, {"number": 2, "question": "When should you treat the firearm in your possession as a loaded firearm?", "questionHe": "מתי יש להתייחס לכלי הירייה שברשותך, כאל כלי טעון?", "options": [{"letter": "A", "text": "Only when the magazine is inserted.", "textHe": "רק כאשר המחסנית בפנים."}, {"letter": "B", "text": "Only when the magazine is inserted and I have racked the slide.", "textHe": "רק כאשר המחסנית בפנים, וביצעתי דריכה."}, {"letter": "C", "text": "Only when a finger enters the trigger guard.", "textHe": "רק כאשר האצבע נכנסת לתוך שמורת ההדק."}, {"letter": "D", "text": "A firearm must always be treated as loaded.", "textHe": "יש להתייחס לכלי הירייה תמיד כאל כלי טעון."}], "correct": "D", "explanation": "Always treat every firearm as if it is loaded."}, {"number": 3, "question": "You are on the street and identify a person about 50 meters away drawing a knife and beginning to run toward you intending to harm you. What is the correct order of actions in this case?", "questionHe": "אתה נמצא ברחוב, זיהית אדם במרחק של כ־50 מטר ממך שולף סכין, ומתחיל לרוץ לכיוון שלך בכוונה לפגוע בך. מהו סדר הפעולות הנכון במקרה זה?", "options": [{"letter": "A", "text": "If the conditions for opening fire are met: draw the firearm and fire toward the center of the attacker's body.", "textHe": "במידה שהתקיימו כללי הפתיחה באש: שליפת נשק, ירי לכיוון מרכז הגוף של התוקף."}, {"letter": "B", "text": "If the conditions for opening fire are met: draw the firearm, warn, and fire while minimizing injury to the attacker.", "textHe": "במידה שהתקיימו כללי הפתיחה באש: שליפת נשק, אזהרה, ירי תוך צמצום פגיעה בתוקף."}, {"letter": "C", "text": "Draw the firearm and shoot toward the attacker's legs; if he does not stop, fire toward center mass.", "textHe": "שליפת נשק, ירי לכיוון הרגליים של התוקף, אם לא עצר, ירי לכיוון מרכז גוף."}, {"letter": "D", "text": "Do not use the firearm because this is an attack with a cold weapon.", "textHe": "לא אשתמש בנשק, מדובר בתקיפה בנשק קר."}], "correct": "B", "explanation": "The intended answer is B: opening fire is a last resort; where it can be done without increasing danger, an advance warning should be given, and force should be limited to what is necessary to stop the threat."}, {"number": 4, "question": "May you transfer a firearm that you received under a private carry-and-possession license to another person?", "questionHe": "האם מותר להעביר נשק שקיבלת ברישיון פרטי לנשיאה ואחזקה, לאדם אחר?", "options": [{"letter": "A", "text": "Yes.", "textHe": "מותר."}, {"letter": "B", "text": "No.", "textHe": "אסור."}, {"letter": "C", "text": "Only to first-degree family members who live in the same home as the license holder.", "textHe": "מותר רק לבני משפחה מדרגה ראשונה שמתגוררים באותו בית עם בעל הרישיון."}, {"letter": "D", "text": "Yes, with approval from an authorized police officer.", "textHe": "מותר באישור שוטר מוסמך."}], "correct": "B", "explanation": "A privately licensed firearm may not simply be handed over to another person."}, {"number": 5, "question": "You finished firearms training at the range. What is the first action you must take after finishing the shooting?", "questionHe": "סיימת אימון ירי במטווח. מהי הפעולה הראשונה שעליך לעשות לאחר סיום הירי?", "options": [{"letter": "A", "text": "Put the pistol into the holster.", "textHe": "הכנסת האקדח לנרתיק."}, {"letter": "B", "text": "Unload it in the presence of a firearms instructor / range officer.", "textHe": "פריקה בנוכחות מדריך ירי / מפקח מטווח."}, {"letter": "C", "text": "Check the sights.", "textHe": "בדיקת כוונות."}, {"letter": "D", "text": "Load ammunition.", "textHe": "טעינת כדורים."}], "correct": "B", "explanation": "At the range, unloading is performed under the supervision of the instructor/range officer."}, {"number": 6, "question": "The purpose of training at the shooting range is:", "questionHe": "מטרת האימון במטווח הינה:", "options": [{"letter": "A", "text": "To hit the target.", "textHe": "לפגוע במטרה."}, {"letter": "B", "text": "To know how to disassemble the firearm.", "textHe": "לדעת פירוק של הנשק."}, {"letter": "C", "text": "To know how to clean the firearm.", "textHe": "לדעת איך לנקות את הנשק."}, {"letter": "D", "text": "To know everything required in order to carry, use and store the firearm and to protect yourself with it.", "textHe": "לדעת את כל שנדרש כדי לשאת, להשתמש, לאחסן ולהגן על עצמי באמצעות כלי ירייה."}], "correct": "D", "explanation": "Range training covers the overall knowledge and safe handling required of a firearm license holder."}, {"number": 7, "question": "You plan to travel abroad for a long period of several months. What should you do?", "questionHe": "אתה מתכוון לצאת לחו״ל לתקופה ארוכה של מספר חודשים, כיצד תנהג?", "options": [{"letter": "A", "text": "Leave the firearm in the safe of a licensed friend so it will not remain in an empty home.", "textHe": "אשאיר את הנשק בכספת של חבר בעל רישיון כדי שהנשק לא יהיה בבית ריק."}, {"letter": "B", "text": "Because it is permitted, leave the firearm at home according to the instructions, and therefore I bear no responsibility.", "textHe": "בגלל שמותר, אשאיר את הנשק בבית, זה לפי ההוראות ולכן אין עליי אחריות."}, {"letter": "C", "text": "Preferably deposit the firearm with an authorized firearms dealer; in every case the responsibility remains mine.", "textHe": "אעדיף להפקיד את הנשק בבית מסחר מורשה, בכל מקרה האחריות היא עליי."}, {"letter": "D", "text": "Deposit the firearm with the police.", "textHe": "אפקיד את הנשק במשטרה."}], "correct": "C", "explanation": "The intended answer on this test is to deposit it with an authorized firearms dealer, while responsibility remains with the license holder."}, {"number": 8, "question": "You cleaned your firearm at home and a round was accidentally discharged. In this case, to whom must you report it?", "questionHe": "ניקית את נשקך בבית, ״נפלט״ כדור. במקרה זה יש לדווח ל:", "options": [{"letter": "A", "text": "Israel Police, immediately, in every case of an accidental discharge.", "textHe": "משטרת ישראל, מיידית, בכל מקרה של פליטת כדור."}, {"letter": "B", "text": "Israel Police only when there are injuries.", "textHe": "משטרת ישראל, רק כאשר יש נפגעים."}, {"letter": "C", "text": "There is no need to report it; accidental discharges are routine.", "textHe": "אין צורך לדווח בכלל, פליטות כדורים זה דבר שיגרתי."}, {"letter": "D", "text": "The shooting range where you completed your training.", "textHe": "למטווח בו ביצעת את הכשרתך."}], "correct": "A", "explanation": "The intended answer on this test is immediate reporting to the Israel Police."}, {"number": 9, "question": "While at the beach with several friends, some of whom are licensed firearm holders, you want to go swimming. What should you do?", "questionHe": "בעת שהיית בים עם מספר חברים חלקם מחזיקי כלי ירייה ברישיון, רצית להתרחץ במים, כיצד עליך לנהוג?", "options": [{"letter": "A", "text": "If one or more of the friends are licensed, give them the firearm for safekeeping until you return from swimming.", "textHe": "במידה ואחד או יותר מהחברים מחזיקים בעצמם ברישיון, תיתן להם את הנשק למשמורת עד שתחזור מהרחצה."}, {"letter": "B", "text": "Deposit the firearm with an authorized firearms dealer.", "textHe": "תפקיד את הנשק בבית מסחר מורשה."}, {"letter": "C", "text": "You may not give the firearm to a friend for safekeeping, so it is better to leave it in your safe at home or not enter the water.", "textHe": "לא ניתן לתת את הנשק למשמורת אצל חבר ולכן עדיף שתשאיר את הנשק בכספת בבית או שלא תיכנס לרחוץ במים."}, {"letter": "D", "text": "Deposit the firearm at a nearby police station.", "textHe": "תפקיד את הנשק בתחנת משטרה קרובה."}], "correct": "C", "explanation": "A licensed friend is not automatically permitted to take custody of your privately licensed firearm."}, {"number": 10, "question": "Who is authorized to determine whether a pistol is serviceable?", "questionHe": "מי מוסמך לקבוע תקינות לאקדח?", "options": [{"letter": "A", "text": "The firearm owner.", "textHe": "בעל הנשק."}, {"letter": "B", "text": "An authorized firearms dealer.", "textHe": "סוחר מורשה לכלי ירייה."}, {"letter": "C", "text": "A firearms instructor.", "textHe": "מדריך ירי."}, {"letter": "D", "text": "Answers B and C are correct.", "textHe": "תשובות ב׳ + ג׳ נכונות."}], "correct": "D", "explanation": "According to the test, both an authorized firearms dealer and a firearms instructor are qualified for this determination."}, {"number": 11, "question": "What is safety?", "questionHe": "מהי בטיחות?", "options": [{"letter": "A", "text": "Safety is a system of rules intended to prevent harm to life, body and property.", "textHe": "בטיחות היא מערכת כללים שמטרתה למנוע פגיעה בנפש, גוף ורכוש."}, {"letter": "B", "text": "It means the safety rules that the firearms instructor must read aloud at the beginning of training.", "textHe": "הכוונה היא לכללי הבטיחות שעל מדריך הירי להקריא בתחילת האימון."}, {"letter": "C", "text": "The term 'firearm safety' is not relevant; the correct expression is caution in its use.", "textHe": "הביטוי בטיחות בכלי ירייה אינו רלוונטי, הביטוי הנכון הינו זהירות בשימוש בו."}, {"letter": "D", "text": "Safety is whatever a professional in a particular field is required to follow while working, for example the safety of a firearms instructor at the range.", "textHe": "בטיחות היא מה שבעל מקצוע בתחום מסוים נדרש לו בעת שהוא עובד, לדוגמה בטיחות של מדריך הירי במטווח."}], "correct": "A", "explanation": "This is the general definition of safety used in the test."}, {"number": 12, "question": "You took your firearm out of the safe and noticed that it is cocked. What sequence of actions should you perform?", "questionHe": "הוצאת את נשקך מהכספת ושמת לב שהנשק דרוך, מהם סדר הפעולות שעליך לבצע?", "options": [{"letter": "A", "text": "Go to the nearest range and unload it with a firearms instructor.", "textHe": "לגשת למטווח הקרוב ולפרוק בליווי מדריך ירי."}, {"letter": "B", "text": "Contact the Firearms Licensing Division and unload it while receiving telephone instructions.", "textHe": "להתקשר לאגף כלי ירייה ולפרוק בליווי הנחיות טלפוניות."}, {"letter": "C", "text": "Unload it toward the safe.", "textHe": "לבצע פריקה לכיוון הכספת."}, {"letter": "D", "text": "Locate a safe backstop, keep people away, separate ammunition from yourself and the firearm, and perform an unloading procedure.", "textHe": "לאתר חומת מפגע, להרחיק אוכלוסייה, להרחיק תחמושת ממני ומהנשק ולבצע פריקה."}], "correct": "D", "explanation": "The unloading procedure begins by establishing a safe direction/backstop and removing people and ammunition from the area."}, {"number": 13, "question": "You arrived for periodic training at a shooting range and, during registration, noticed that the firearm is cocked. What should you do?", "questionHe": "הגעת לאימון תקופתי במטווח, במעמד הרישום הבחנת שהנשק דרוך, מה עליך לעשות?", "options": [{"letter": "A", "text": "Contact the instructor; from the moment you arrive at the range, firearm handling is performed only under the instructor's supervision.", "textHe": "לפנות למדריך, מרגע הגעה למטווח תפעול הנשק הוא אך ורק בליווי מדריך."}, {"letter": "B", "text": "Find a safe backstop at the range and unload it yourself, because the firearm is personal and therefore I have full authority to unload it.", "textHe": "לחפש במטווח חומת מפגע ולפרוק, הנשק הוא אישי ועל כן יש לי את כל הסמכות לבצע פריקה."}, {"letter": "C", "text": "Ignore it, because the firearm will be fired shortly anyway.", "textHe": "לא להתייחס, ממילא עוד זמן קצר יתבצע ירי בנשק."}, {"letter": "D", "text": "Remove the magazine.", "textHe": "להוציא מחסנית."}], "correct": "A", "explanation": "Once at the range, firearm handling is done under the instructor/range officer's direction."}, {"number": 14, "question": "A friend sold his personal firearm and wants to give you the ammunition left over from it (new, serviceable ammunition). Are you allowed to take it?", "questionHe": "חבר מכר את נשקו האישי ומעוניין לתת לך את התחמושת שנשארה לו (תחמושת חדשה ותקינה), האם אתה/ה רשאי/ת לקחת?", "options": [{"letter": "A", "text": "Yes, as long as I do not exceed the 50-round limit.", "textHe": "כן, כל עוד איני עובר את מכסת ה־50 כדור."}, {"letter": "B", "text": "Yes, provided that a firearms instructor inspects the ammunition.", "textHe": "כן ובתנאי שמדריך הירי בוחן את התחמושת."}, {"letter": "C", "text": "No. Transferring ammunition from one person to another requires an ownership-transfer document.", "textHe": "לא, העברת תחמושת מאדם לחברו מצריכה מסמך העברת בעלות."}, {"letter": "D", "text": "No. Ammunition, like a firearm, requires a license.", "textHe": "לא, תחמושת כמו כלי ירייה – נדרש רישיון."}], "correct": "D", "explanation": "The intended answer on this test is D."}, {"number": 15, "question": "You decided to go on vacation at a hotel. May you use the hotel's safe, or the safe in your hotel room, to store the firearm during the vacation?", "questionHe": "החלטת לצאת לנופש בבית מלון, האם ניתן לעשות שימוש בכספת של בית המלון, או בכספת בחדר של בית המלון לצורך אפסנת הנשק במהלך הנופש?", "options": [{"letter": "A", "text": "Yes, if the safe is fixed in place as required by Firearms Licensing Division procedures.", "textHe": "זה אפשרי במידה והכספת מקובעת כמו שרשום בנהלי אגף כלי ירייה."}, {"letter": "B", "text": "Yes, provided that I separate the magazine from the firearm.", "textHe": "זה אפשרי ובתנאי כי אני מפריד את המחסנית מהנשק."}, {"letter": "C", "text": "Yes, provided that the hotel's security officer approves it.", "textHe": "זה אפשרי ובלבד שקב״ט המלון מאשר את זה."}, {"letter": "D", "text": "No. The firearm may not be stored in the hotel's safe because the license holder does not have the required exclusive control over it, and hotel security staff and others may have access.", "textHe": "לא ניתן לאפסן את הנשק בכספת המלון מכיוון שאין שליטה בלעדית עליה כנדרש ויש גישה לקב״ט המלון ונוספים."}], "correct": "D", "explanation": "The intended answer on this test is D because the license holder lacks exclusive control over a hotel safe."}, {"number": 16, "question": "You replaced the sights on the firearm. What should you do?", "questionHe": "החלפת כוונות בנשק, מה עליך לעשות?", "options": [{"letter": "A", "text": "Train at a shooting range to verify that the firearm is zeroed and the sights are functioning correctly — at least 20 rounds.", "textHe": "אימון במטווח בכדי לוודא שהנשק מאופס והכוונות תקינות – לפחות 20 כדור."}, {"letter": "B", "text": "There is no need to zero pistol sights; no zeroing is required.", "textHe": "אין צורך לאפס כוונות באקדח – אין צורך באיפוס."}, {"letter": "C", "text": "Perform a 'dry zero': aim at a fixed point, dry-fire, and verify that at the end you are still on the point.", "textHe": "״איפוס יבש״, לכוון אל נקודה מסוימת, לבצע נקירה ולוודא שבסוף אתה/ה על הנקודה."}, {"letter": "D", "text": "Perform a 'dry zero' at the range in the presence of a firearms instructor.", "textHe": "לבצע ״איפוס יבש״ במטווח בנוכחות מדריך ירי."}], "correct": "A", "explanation": "The intended answer on this test is live range verification after replacing the sights."}, {"number": 17, "question": "Is it permitted to carry the firearm in a shoulder/side bag?", "questionHe": "האם מותר לשאת את הנשק בתיק צד?", "options": [{"letter": "A", "text": "No. A firearm must be in a holster attached close to the body.", "textHe": "לא, נשק חייב להימצא בנרתיק צמוד לגוף."}, {"letter": "B", "text": "Yes, provided that the bag has a dedicated concealed compartment.", "textHe": "כן, בתנאי שמדובר בתיק בעל תא הסלקה."}, {"letter": "C", "text": "No, because if the bag is stolen, that constitutes abandoning the firearm.", "textHe": "לא, ברגע שנגנב התיק זאת הפקרת נשק."}, {"letter": "D", "text": "Yes, provided that the bag is always on you and kept close to your body.", "textHe": "כן ובתנאי שהתיק תמיד עליך ונמצא צמוד לגוף."}], "correct": "A", "explanation": "The intended answer on this test is A: carry in a proper holster close to the body."}, {"number": 18, "question": "What actions should you take before unloading the pistol?", "questionHe": "מהן הפעולות שעליך לעשות טרם פריקת האקדח?", "options": [{"letter": "A", "text": "Choose a safe backstop, remove ammunition from the area, keep people away, and eliminate distractions.", "textHe": "בחירת חומת מפגע, הרחקת תחמושת, הרחקת אנשים, נטרול מסיחי דעת."}, {"letter": "B", "text": "Remove the magazine from the pistol.", "textHe": "להוציא מחסנית מהאקדח."}, {"letter": "C", "text": "Go outside and stand facing a pile of sand.", "textHe": "לצאת החוצה ולעמוד מול ערמת חול."}, {"letter": "D", "text": "Close the door of the room where I am unloading the firearm.", "textHe": "לסגור את דלת החדר בו אני מבצע את הפריקה."}], "correct": "A", "explanation": "Before manipulating the firearm, establish the safe environment: backstop, no loose ammunition, no people and no distractions."}, {"number": 19, "question": "You arrived home and want to store the firearm in the safe. Is it necessary to unload it?", "questionHe": "הגעת לביתך ואתה מעוניין/ת לאחסן את הנשק בכספת, האם יש צורך לבצע פריקה?", "options": [{"letter": "A", "text": "No, unless there is reason to suspect that the firearm was cocked.", "textHe": "לא, אלא אם כן יש חשד לכך שהנשק נדרך."}, {"letter": "B", "text": "Yes. Every transfer or change of location of the firearm requires unloading.", "textHe": "כן, כל מעבר של הנשק מחייב פריקה."}, {"letter": "C", "text": "No. There is no need to unload it as long as the firearm remained on me the entire time.", "textHe": "לא, אין צורך לבצע פריקה כל עוד הנשק היה תמיד עליי."}, {"letter": "D", "text": "Answers A and C are correct.", "textHe": "תשובות א׳ וג׳ נכונות."}], "correct": "D", "explanation": "The intended answer on this test is D."}, {"number": 20, "question": "May the firearm be stored in the safe together with ammunition?", "questionHe": "האם מותר לאחסן את הנשק בכספת יחד עם התחמושת?", "options": [{"letter": "A", "text": "No. Whenever the firearm is separated from you, the ammunition must be separated from the firearm and the firearm unloaded.", "textHe": "אסור, בכל הפרדה של הנשק ממך עליך לבצע הפרדה של תחמושת מהנשק ופריקה."}, {"letter": "B", "text": "Yes, provided that it is your own safe.", "textHe": "מותר ובתנאי שזו הכספת שלך."}, {"letter": "C", "text": "No. A firearm may not be stored together with ammunition.", "textHe": "אסור, אין לאחסן נשק עם תחמושת."}, {"letter": "D", "text": "Only the magazine in the firearm may be stored with it; all other ammunition must be hidden and kept out of reach of unauthorized persons.", "textHe": "מותר אך ורק את המחסנית שבנשק, ושאר התחמושת במקום נסתר והרחק מהישג יד של לא מורשה."}], "correct": "D", "explanation": "The intended answer is D. Current Firearms Licensing Division storage guidance says a pistol may be placed in the safe with the magazine in the magazine well, while other ammunition must be secured against unauthorized access."}];
+let questions = [];
+let index = 0;
+let correctCount = 0;
+let answered = false;
+let missed = [];
+let language = localStorage.getItem('quizLanguage') || 'both';
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function setLanguage(value) {
+  language = value;
+  localStorage.setItem('quizLanguage', value);
+  updateLanguageButtons();
+  if (!document.getElementById('quiz').classList.contains('hidden')) render();
+  else showResults();
+}
+
+function updateLanguageButtons() {
+  document.querySelectorAll('#languageControls button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === language);
+  });
+}
+
+function questionHtml(q) {
+  if (language === 'en') return escapeHtml(q.question);
+  if (language === 'he') return `<div class="he">${escapeHtml(q.questionHe)}</div>`;
+  return `<div class="both-block"><span class="lang-label">ENGLISH</span>${escapeHtml(q.question)}</div>
+          <div class="both-block he"><span class="lang-label">עברית</span>${escapeHtml(q.questionHe)}</div>`;
+}
+
+function optionHtml(opt) {
+  if (language === 'en') {
+    return `<div class="option-row"><span class="letter">${opt.letter}</span>
+      <span class="option-text">${escapeHtml(opt.text)}</span></div>`;
+  }
+  if (language === 'he') {
+    return `<div class="option-row"><span class="letter">${opt.letter}</span>
+      <span class="option-text he">${escapeHtml(opt.textHe)}</span></div>`;
+  }
+  return `<div class="option-row"><span class="letter">${opt.letter}</span>
+    <span class="option-text"><div>${escapeHtml(opt.text)}</div>
+    <div class="option-he">${escapeHtml(opt.textHe)}</div></span></div>`;
+}
+
+function shuffled(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function restart(doShuffle=false) {
+  questions = doShuffle ? shuffled(MASTER) : [...MASTER];
+  index = 0; correctCount = 0; answered = false; missed = [];
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  updateLanguageButtons();
+  render();
+}
+
+function render() {
+  answered = false;
+  const q = questions[index];
+  document.getElementById('counter').textContent = `Question ${index+1} of ${questions.length}`;
+  document.getElementById('score').textContent = `Score: ${correctCount}`;
+  document.getElementById('bar').style.width = `${(index/questions.length)*100}%`;
+  document.getElementById('question').innerHTML = questionHtml(q);
+
+  const options = document.getElementById('options');
+  options.innerHTML = '';
+  q.options.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.innerHTML = optionHtml(opt);
+    b.onclick = () => choose(opt.letter, b);
+    options.appendChild(b);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+  document.getElementById('next').classList.add('hidden');
+}
+
+function choose(letter, button) {
+  if (answered) return;
+  answered = true;
+  const q = questions[index];
+  const buttons = [...document.querySelectorAll('.option')];
+
+  buttons.forEach(b => {
+    b.disabled = true;
+    if (b.querySelector('.letter').textContent === q.correct) b.classList.add('correct');
+  });
+
+  const fb = document.getElementById('feedback');
+  if (letter === q.correct) {
+    correctCount++;
+    fb.className = 'feedback good';
+    fb.innerHTML = `<strong>✓ Correct / נכון</strong><br>${escapeHtml(q.explanation)}`;
+  } else {
+    button.classList.add('wrong');
+    missed.push({...q, selected:letter});
+    fb.className = 'feedback bad';
+    fb.innerHTML = `<strong>✗ Incorrect / לא נכון — ${q.correct}</strong><br>${escapeHtml(q.explanation)}`;
+  }
+
+  document.getElementById('score').textContent = `Score: ${correctCount}`;
+  const next = document.getElementById('next');
+  next.textContent = index === questions.length - 1 ? 'See results' : 'Next question';
+  next.classList.remove('hidden');
+}
+
+function nextQuestion() {
+  if (index < questions.length - 1) {
+    index++; render(); window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    showResults();
+  }
+}
+
+function displayReviewQuestion(q) {
+  if (language === 'en') return escapeHtml(q.question);
+  if (language === 'he') return `<span class="he">${escapeHtml(q.questionHe)}</span>`;
+  return `${escapeHtml(q.question)}<br><span class="he">${escapeHtml(q.questionHe)}</span>`;
+}
+
+function displayReviewOption(opt) {
+  if (language === 'en') return escapeHtml(opt.text);
+  if (language === 'he') return `<span class="he">${escapeHtml(opt.textHe)}</span>`;
+  return `${escapeHtml(opt.text)}<br><span class="he">${escapeHtml(opt.textHe)}</span>`;
+}
+
+function showResults() {
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+
+  const pct = Math.round((correctCount/questions.length)*100);
+  document.getElementById('scoreBig').textContent = `${correctCount} / ${questions.length}`;
+  document.getElementById('resultText').textContent =
+    `${pct}% — You missed ${missed.length} question${missed.length===1?'':'s'}.`;
+  document.getElementById('missedBtn').classList.toggle('hidden', missed.length===0);
+
+  const review = document.getElementById('review');
+  review.innerHTML = missed.length ? '<h3>Questions to review</h3>' : '<p>Excellent—no missed questions.</p>';
+
+  missed.forEach(q => {
+    const d = document.createElement('div');
+    d.className = 'review-item';
+    const right = q.options.find(o => o.letter === q.correct);
+    const chosen = q.options.find(o => o.letter === q.selected);
+    d.innerHTML = `<strong>Q${q.number}. ${displayReviewQuestion(q)}</strong>
+      <div>Your answer: ${q.selected} — ${displayReviewOption(chosen)}</div>
+      <div>Correct: ${q.correct} — ${displayReviewOption(right)}</div>`;
+    review.appendChild(d);
+  });
+
+  updateLanguageButtons();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startMissed() {
+  if (!missed.length) return;
+  questions = missed.map(q => {
+    const copy = {...q};
+    delete copy.selected;
+    return copy;
+  });
+  index=0; correctCount=0; answered=false; missed=[];
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  render();
+}
+
+updateLanguageButtons();
+restart(false);
+</script>
+</body>
+</html>
